@@ -26,18 +26,7 @@ public class AuthConfig {
     public UserDetailsService userDetailsService(){
         return new CustomUserDetailsService();
     }
-    //    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        return http.csrf(AbstractHttpConfigurer::disable)
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/products/welcome", "/api/products/new", "/api/products/authenticate").permitAll()
-//                        .requestMatchers("/api/products/**").authenticated()
-//                )
-//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authenticationProvider(authenticationProvider())
-//                .addFilterAfter(authFilter, UsernamePasswordAuthenticationFilter.class)
-//                .build();
-//    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)

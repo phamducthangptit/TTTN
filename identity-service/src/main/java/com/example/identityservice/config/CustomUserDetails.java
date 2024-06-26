@@ -1,6 +1,6 @@
 package com.example.identityservice.config;
 
-import com.example.identityservice.entity.UserCredential;
+import com.example.identityservice.entity.Account;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,10 +15,10 @@ public class CustomUserDetails implements UserDetails {
     private String password;
     private List<GrantedAuthority> authorities;
 
-    public CustomUserDetails(UserCredential userCredential){
-        name = userCredential.getName();
-        password = userCredential.getPassword();
-        authorities = Arrays.stream(userCredential.getRoles().split(","))
+    public CustomUserDetails(Account account){
+        name = account.getUserName();
+        password = account.getPassword();
+        authorities = Arrays.stream(account.getRole().getRoleName().split(","))
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
     }
