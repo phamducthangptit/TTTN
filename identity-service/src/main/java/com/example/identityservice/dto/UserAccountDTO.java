@@ -16,5 +16,6 @@ public class UserAccountDTO {
     private int roleId;
     private String userName;
     private String password;
-    private String status;
+    private int status;
+    private String code;
 }

@@ -33,7 +33,7 @@ public class AccountService {
     private JwtService jwtService;
 
     @Transactional
-    public int createAccountAndUser(User user, int roleId, String userName, String password, String status) {
+    public int createAccountAndUser(User user, int roleId, String userName, String password, int status) {
         Role role = roleRepository.findById(roleId).orElseThrow(() -> new IllegalArgumentException("Role not found"));
         Optional<User> searchUserByEmail = userRepository.findByemail(user.getEmail());
         Optional<Account> searchAccountByUserName = accountRepository.findByuserName(userName);

@@ -34,7 +34,7 @@ public class Account {
     private String password;
 
     @Column(name = "status", nullable = false)
-    private String status;
+    private int status;
 
     @Column(name = "create_at", nullable = false)
     private LocalDateTime createAt;
