@@ -2,6 +2,7 @@ package com.example.identityservice.controller;
 
 import com.example.identityservice.code.GenerateCode;
 import com.example.identityservice.dto.AuthRequest;
+import com.example.identityservice.dto.ResponseDTO;
 import com.example.identityservice.dto.UserAccountDTO;
 import com.example.identityservice.entity.User;
 import com.example.identityservice.service.AccountService;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -69,24 +71,32 @@ public class AuthController {
                     userAccountDTO.getStatus()
             );
             if (result == -1) {
-                return ResponseEntity.badRequest().body("Email đã tồn tại");
+                ResponseDTO responseDTO = new ResponseDTO("ErrorEmail", "Email đã tồn tại");
+                return new ResponseEntity<>(responseDTO, HttpStatus.CONFLICT);
             }
             if (result == -2) {
-                return ResponseEntity.badRequest().body("UserName đã tồn tại");
+                ResponseDTO responseDTO = new ResponseDTO("ErrorUserName", "UserName đã tồn tại");
+                return new ResponseEntity<>(responseDTO, HttpStatus.CONFLICT);
             }
-            return ResponseEntity.ok().body("Tạo tài khoản thành công");
+            ResponseDTO responseDTO = new ResponseDTO("CreateAccountOk", "Tạo tài khoản thành công");
+            return new ResponseEntity<>(responseDTO, HttpStatus.OK);
         } else {
-            return ResponseEntity.badRequest().body("Mã xác nhận không đúng");
+            ResponseDTO responseDTO = new ResponseDTO("ErrorCode", "Mã xác nhận không đúng");
+            return new ResponseEntity<>(responseDTO, HttpStatus.CONFLICT);
         }
     }
 
-    @PostMapping("/token")
-    public String getToken(@RequestBody AuthRequest authRequest) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
-        if (authentication.isAuthenticated()) {
-            return accountService.generateToken(authRequest.getUsername());
-        } else {
-            throw new UsernameNotFoundException("invalid user request");
+    @PostMapping("/login")
+    public ResponseEntity<?> getToken(@RequestBody AuthRequest authRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+            if (authentication.isAuthenticated()) {
+                return new ResponseEntity<>(new ResponseDTO("token", accountService.generateToken(authRequest.getUsername())), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+        } catch (BadCredentialsException e) {
+            return new ResponseEntity<>(new ResponseDTO("ErrorLogin", "Tên đăng nhập hoặc mật khẩu không đúng"), HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -108,12 +118,12 @@ public class AuthController {
         }
         for (String key : mapCode.keySet()) {
             if (email.equals(key)) { // email này đã có mã gửi về
-                return ResponseEntity.badRequest().body("Đã gửi mã về email này! Vui lòng kiểm tra lại.");
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
         }
         // nếu không nằm trong 2 t/h trên thì thỏa mãn điều kiện, cho vào map --> gửi mail
         mapCode.put(email, code);
         emailService.sendEmail(email, "Mã xác nhận", code);
-        return new ResponseEntity<>(code, HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

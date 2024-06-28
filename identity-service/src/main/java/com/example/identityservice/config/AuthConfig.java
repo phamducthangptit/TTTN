@@ -31,7 +31,7 @@ public class AuthConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/token", "/api/auth/validate", "/api/auth/send-code").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/validate", "/api/auth/send-code").permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults()).build();
