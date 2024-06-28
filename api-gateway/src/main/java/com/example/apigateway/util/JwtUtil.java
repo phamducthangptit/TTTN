@@ -1,5 +1,6 @@
 package com.example.apigateway.util;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -16,5 +17,11 @@ public class JwtUtil {
     private Key getSignKey() {
         byte[] keyByte = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyByte);
+    }
+    public Claims extractAllClaims(String token) {
+        return Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token).getBody();
+    }
+    public String extractRole(String token){
+        return extractAllClaims(token).get("role", String.class);
     }
 }

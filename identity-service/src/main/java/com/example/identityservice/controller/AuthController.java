@@ -1,6 +1,8 @@
 package com.example.identityservice.controller;
 
 import com.example.identityservice.code.GenerateCode;
+import com.example.identityservice.config.CustomUserDetails;
+import com.example.identityservice.config.CustomUserDetailsService;
 import com.example.identityservice.dto.AuthRequest;
 import com.example.identityservice.dto.ResponseDTO;
 import com.example.identityservice.dto.UserAccountDTO;
@@ -32,6 +34,9 @@ public class AuthController {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
 
     private HashMap<String, String> mapCode = new HashMap<>();
 
@@ -91,7 +96,9 @@ public class AuthController {
         try {
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
             if (authentication.isAuthenticated()) {
-                return new ResponseEntity<>(new ResponseDTO("token", accountService.generateToken(authRequest.getUsername())), HttpStatus.OK);
+                CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(authRequest.getUsername());
+                String role = userDetails.getAuthority();
+                return new ResponseEntity<>(new ResponseDTO("token", accountService.generateToken(authRequest.getUsername(), role)), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
