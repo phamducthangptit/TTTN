@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -37,10 +36,10 @@ public class AccountService {
         Role role = roleRepository.findById(roleId).orElseThrow(() -> new IllegalArgumentException("Role not found"));
         Optional<User> searchUserByEmail = userRepository.findByemail(user.getEmail());
         Optional<Account> searchAccountByUserName = accountRepository.findByuserName(userName);
-        if(searchUserByEmail.isPresent()){
+        if (searchUserByEmail.isPresent()) {
             return -1;
         }
-        if(searchAccountByUserName.isPresent()){
+        if (searchAccountByUserName.isPresent()) {
             return -2;
         }
         user = userRepository.save(user);
@@ -57,11 +56,11 @@ public class AccountService {
         return 1;
     }
 
-    public String generateToken(String username, String role){
+    public String generateToken(String username, String role) {
         return jwtService.generateToken(username, role);
     }
 
-    public void validateToken(String token){
+    public void validateToken(String token) {
         jwtService.validateToken(token);
     }
 }
