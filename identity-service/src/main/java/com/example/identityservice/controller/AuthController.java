@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/auth-service")
 public class AuthController {
     @Autowired
     private AccountService accountService;

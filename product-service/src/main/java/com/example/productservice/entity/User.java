@@ -1,6 +1,5 @@
-package com.example.informationservice.entity;
+package com.example.productservice.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,11 +33,8 @@ public class User {
     @Column(name = "phone_number")
     private String phoneNumber;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
     @Column(name = "create_at", nullable = false)
     private LocalDateTime createAt;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.EAGER)
-    private Account account;
 
 }

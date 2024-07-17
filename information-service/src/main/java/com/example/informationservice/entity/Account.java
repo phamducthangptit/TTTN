@@ -1,5 +1,6 @@
 package com.example.informationservice.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -36,6 +37,7 @@ public class Account {
     @Column(name = "status", nullable = false)
     private int status;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
     @Column(name = "create_at", nullable = false)
     private LocalDateTime createAt;
 }

@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/information/user")
+@RequestMapping("/api/information-service/user")
 public class UserController {
     @Autowired
     private AccountService accountService;

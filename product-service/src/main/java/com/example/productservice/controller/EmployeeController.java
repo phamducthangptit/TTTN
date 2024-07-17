@@ -1,0 +1,174 @@
+package com.example.productservice.controller;
+
+import com.example.productservice.dto.*;
+import com.example.productservice.entity.Category;
+import com.example.productservice.entity.CategoryDetail;
+import com.example.productservice.entity.Detail;
+import com.example.productservice.entity.Manufacturer;
+import com.example.productservice.id.CategoryDetailId;
+import com.example.productservice.service.*;
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("api/product-service")
+public class EmployeeController {
+    @Autowired
+    private ManufacturerService manufacturerService;
+
+    @Autowired
+    private CategoryService categoryService;
+
+    @Autowired
+    private DetailService detailService;
+
+    @Autowired
+    private CategoryDetailService categoryDetailService;
+
+    @Autowired
+    private ProductService productService;
+
+    @GetMapping("/manufacturer/get-all-manufacturer")
+    public ResponseEntity<?> getAllManufacturer(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                                @RequestHeader("X-Role") String role) {
+        if (role.equals("EMPLOYEE"))
+            return new ResponseEntity<>(manufacturerService.getAllManufacturer(), HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @PostMapping("/manufacturer/add-manufacturer")
+    public ResponseEntity<?> addManufacturer(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                             @RequestHeader("X-Role") String role, @RequestBody ManufacturerDTO manufacturerDTO) {
+        if (role.equals("EMPLOYEE")) {
+            Manufacturer manufacturer = manufacturerService.addNewManufacturer(manufacturerDTO);
+            return new ResponseEntity<>(manufacturer, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @PostMapping("/manufacturer/update-manufacturer")
+    public ResponseEntity<?> updateManufacturer(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                                @RequestHeader("X-Role") String role, @RequestBody ManufacturerUpdateDTO manufacturerUpdateDTO) {
+        if (role.equals("EMPLOYEE")) {
+            manufacturerService.updateManufacturer(manufacturerUpdateDTO);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @DeleteMapping("/manufacturer/delete-manufacturer")
+    public ResponseEntity<?> deleteManufacturer(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                                @RequestHeader("X-Role") String role, @RequestParam("id") int id) {
+        int result = manufacturerService.deleteManufacturer(id);
+        if (result == 1) {
+            return new ResponseEntity<>(new ResponseDTO("deleteManufacturerOk", "Xóa nhà sản xuất thành công"), HttpStatus.OK);
+        }
+        if (result == -2)
+            return new ResponseEntity<>(new ResponseDTO("deleteManufacturerError", "Mã nhà sản xuất không tông tại!"), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ResponseDTO("deleteManufacturerError", "Xóa nhà sản xuất thất bại vì đã cung cấp sản phẩm!"), HttpStatus.BAD_REQUEST);
+    }
+
+    @GetMapping("/category/get-all-category")
+    public ResponseEntity<?> getAllCategory(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                            @RequestHeader("X-Role") String role) {
+        if (role.equals("EMPLOYEE")) {
+            return new ResponseEntity<>(categoryService.getAllCategory(), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @Transactional
+    @PostMapping("/category/add-category")
+    public ResponseEntity<?> addCategory(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                         @RequestHeader("X-Role") String role, @RequestBody CategoryDTO categoryDTO) {
+        if (role.equals("EMPLOYEE")) {
+            Category category = categoryService.addNewCategory(categoryDTO);
+            if (category != null) {
+                System.out.println(category.getCategoryId());
+                // add category detail
+                for (CategoryDetailDTO categoryDetailDTO : categoryDTO.getCategoryDetails()) {
+                    categoryDetailService.addNewCategoryDetail(category.getCategoryId(), categoryDetailDTO.getDetailId());
+                    System.out.println("category id: " + category.getCategoryId());
+                    System.out.println("detail id: " + categoryDetailDTO.getDetailId());
+                }
+                return new ResponseEntity<>(category, HttpStatus.OK); // add category
+            }
+            return new ResponseEntity<>(new ResponseDTO("ErrorNameCategory", "Tên loại sản phẩm đã tồn tại!"), HttpStatus.CONFLICT);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @PostMapping("/category/update-category")
+    public ResponseEntity<?> updateCategory(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                            @RequestHeader("X-Role") String role, @RequestBody CategoryUpdateDTO categoryUpdateDTO) {
+        if (role.equals("EMPLOYEE")) {
+//            categoryService.updateCategory(categoryUpdateDTO);
+            int categoryId = categoryUpdateDTO.getCategoryId();
+            return new ResponseEntity<>(categoryService.updateCategory(categoryUpdateDTO), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @DeleteMapping("/category/delete-category")
+    public ResponseEntity<?> deleteCategory(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                            @RequestHeader("X-Role") String role, @RequestParam("id") int id) {
+        int result = categoryService.deleteCategory(id);
+        if (result == -1)
+            return new ResponseEntity<>(new ResponseDTO("DeleteCategoryError", "Mã loại sản phẩm không tồn tại!"), HttpStatus.BAD_REQUEST);
+        if (result == -2)
+            return new ResponseEntity<>(new ResponseDTO("DeleteCategoryError", "Xóa loại sản phẩm thất bại vì đã tồn tại sản phẩm!"), HttpStatus.CONFLICT);
+        return new ResponseEntity<>(new ResponseDTO("DeleteCategoryOk", "Xóa loại sản phẩm thành công"), HttpStatus.OK);
+    }
+
+    @GetMapping("/detail/get-all-detail")
+    public ResponseEntity<?> getAllDetail(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                          @RequestHeader("X-Role") String role) {
+        if (role.equals("EMPLOYEE"))
+            return new ResponseEntity<>(detailService.getAllDetail(), HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @PostMapping("/detail/add-detail")
+    public ResponseEntity<?> addDetail(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                       @RequestHeader("X-Role") String role, @RequestBody DetailDTO detailDTO) {
+        if (role.equals("EMPLOYEE")) {
+            Detail detail = detailService.addNewDetail(detailDTO);
+            if (detail != null)
+                return new ResponseEntity<>(detail, HttpStatus.OK);
+            return new ResponseEntity<>(new ResponseDTO("ErrorDetail", "Tên thuộc tính đã tồn tại!"), HttpStatus.CONFLICT);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @GetMapping("/product/get-all-product-by-category")
+    public ResponseEntity<?> getAllProduct(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                           @RequestHeader("X-Role") String role, @RequestParam("id") int id) {
+        if (role.equals("EMPLOYEE")) {
+            return new ResponseEntity<>(productService.getAllProductByCategoryId(id), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @GetMapping("/category/get-category-detail")
+    public ResponseEntity<?> getDetailProduct(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                              @RequestHeader("X-Role") String role, @RequestParam("category-id") int categoryId) {
+        if (role.equals("EMPLOYEE")) {
+            if (categoryService.getCategoryById(categoryId) != null)
+                return new ResponseEntity<>(categoryDetailService.getCategoryDetailByCategoryId(categoryId), HttpStatus.OK);
+            return new ResponseEntity<>(new ResponseDTO("ErrorCategoryId", "Id loại sản phẩm không tồn tại"), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @PostMapping("/product/add-new-product")
+    public ResponseEntity<?> addNewProduct(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                           @RequestHeader("X-Role") String role, @RequestBody ProductRequestDTO productRequestDTO){
+        return new ResponseEntity<>(productService.saveProduct(productRequestDTO), HttpStatus.OK);
+    }
+}

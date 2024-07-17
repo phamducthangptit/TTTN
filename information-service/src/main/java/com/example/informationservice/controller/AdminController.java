@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/information/admin")
+@RequestMapping("/api/information-service/admin")
 public class AdminController {
     @Autowired
     private UserService userService;
