@@ -13,27 +13,19 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductResponseDTO {
+public class ProductDetailResponseDTO {
     private static final DecimalFormat decimalFormat = new DecimalFormat("###,###,###,###");
     private Integer productId;
     private String name;
     private String description;
-    private String manufacturerName;
-    private String categoryName;
+    private int manufacturerId;
+    private int categoryId;
     private String price;
     private Integer stock;
+    private List<DetailProductResponseDTO> listDetail;
     private List<String> image;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
     private LocalDateTime createAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
     private LocalDateTime updateAt;
-
-    private String formatPrice(BigDecimal price) {
-        return decimalFormat.format(price) + " VNĐ";
-    }
-
-    // Setter for price
-    public void setPrice(BigDecimal price) {
-        this.price = formatPrice(price);
-    }
 }

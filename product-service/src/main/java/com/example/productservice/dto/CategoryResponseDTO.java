@@ -13,4 +13,5 @@ public class CategoryResponseDTO {
     private int categoryId;
     private String name;
     private List<DetailResponseDTO> detailList;
+    private String image;
 }

@@ -8,32 +8,28 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductResponseDTO {
+public class OrderResponseDTO {
     private static final DecimalFormat decimalFormat = new DecimalFormat("###,###,###,###");
-    private Integer productId;
-    private String name;
-    private String description;
-    private String manufacturerName;
-    private String categoryName;
-    private String price;
-    private Integer stock;
-    private List<String> image;
+    private int orderId;
+    private String totalAmountPaid;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
-    private LocalDateTime createAt;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
-    private LocalDateTime updateAt;
+    private LocalDateTime orderDate;
+    private String address;
+    private String status;
+    private String phone;
+    private int totalProduct;
+    private int checkStatus;
 
     private String formatPrice(BigDecimal price) {
         return decimalFormat.format(price) + " VNĐ";
     }
 
     // Setter for price
-    public void setPrice(BigDecimal price) {
-        this.price = formatPrice(price);
+    public void setTotalAmountPaid(BigDecimal price) {
+        this.totalAmountPaid = formatPrice(price);
     }
 }

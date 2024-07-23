@@ -96,7 +96,9 @@ public class AuthController {
             if (authentication.isAuthenticated()) {
                 CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(authRequest.getUsername());
                 String role = userDetails.getAuthority();
-                return new ResponseEntity<>(new ResponseDTO("token", accountService.generateToken(authRequest.getUsername(), role)), HttpStatus.OK);
+                if(userDetails.getStatus() == 1)
+                    return new ResponseEntity<>(new ResponseDTO("token", accountService.generateToken(authRequest.getUsername(), role)), HttpStatus.OK);
+                else return new ResponseEntity<>(new ResponseDTO("ErrorStatus", "Tài khoản không được đăng nhập!"), HttpStatus.BAD_REQUEST);
             } else {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }

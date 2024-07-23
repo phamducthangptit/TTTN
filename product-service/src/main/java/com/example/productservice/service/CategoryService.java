@@ -28,11 +28,14 @@ public class CategoryService {
     }
 
 
+
+
     private CategoryResponseDTO convertToDTO(Category category) {
         CategoryResponseDTO categoryResponseDTO = new CategoryResponseDTO();
         categoryResponseDTO.setCategoryId(category.getCategoryId());
         categoryResponseDTO.setName(category.getName());
         categoryResponseDTO.setDetailList(category.getCategoryDetails().stream().map(this::convertDetailToDTO).collect(Collectors.toList()));
+        categoryResponseDTO.setImage(category.getImage());
         return categoryResponseDTO;
     }
 
@@ -47,12 +50,17 @@ public class CategoryService {
         if (repository.findByname(categoryDTO.getName()).isPresent()) return null; // neu ton tai name do thi khong luu
         Category category = new Category();
         category.setName(categoryDTO.getName());
+        category.setImage(categoryDTO.getImage());
         return repository.save(category);
     }
 
     @Transactional
     public CategoryResponseDTO updateCategory(CategoryUpdateDTO categoryUpdateDTO) {
         System.out.println(categoryUpdateDTO.toString());
+        repository.updateCategory(categoryUpdateDTO.getName(), categoryUpdateDTO.getCategoryId()); // update name
+        if(!categoryUpdateDTO.getImage().isEmpty()){// thay đổi ảnh
+            repository.updateImageCategory(categoryUpdateDTO.getImage(), categoryUpdateDTO.getCategoryId());
+        }
         // list detail này là list người dùng đã thay đổi, từ fe gửi về
         List<DetailResponseDTO> categoryResponseDTOList = categoryUpdateDTO.getCategoryDetails();
         List<CategoryDetailId> categoryDetailIdListFE = new ArrayList<>();
@@ -87,9 +95,13 @@ public class CategoryService {
         for (CategoryDetailId categoryDetailId : listDeleteDetail) {
             categoryDetailService.deleteCategoryDetail(categoryDetailId.getCategoryId(), categoryDetailId.getDetailId());
         }
+
+        repository.flush();
         System.out.println("List cần xóa: " + listDeleteDetail.toString());
         System.out.println("List cần theem: " + listAddDetail.toString());
         Category category = repository.findBycategoryId(categoryUpdateDTO.getCategoryId());
+        CategoryResponseDTO categoryResponseDTO = convertToDTO(category);
+        System.out.println(categoryResponseDTO.getDetailList().toString());
         return convertToDTO(category);
     }
 

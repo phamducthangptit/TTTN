@@ -15,11 +15,13 @@ public class CustomUserDetails implements UserDetails {
     private String name;
     private String password;
     private String authority;
+    private int status; // Add status field
 
     public CustomUserDetails(Account account){
         name = account.getUserName();
         password = account.getPassword();
         authority = account.getRole().getRoleName();
+        status = account.getStatus();
     }
 
     @Override
@@ -59,5 +61,12 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 }

@@ -11,5 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 public interface AccountRepository extends JpaRepository<Account, Integer> {
+
     Optional<Account> findByuserName(String username);
+
 }

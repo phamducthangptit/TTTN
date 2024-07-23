@@ -13,6 +13,7 @@ public class CategoryUpdateDTO {
     private int categoryId;
     private String name;
     private List<DetailResponseDTO> categoryDetails;
+    private String image;
 
     @Override
     public String toString() {

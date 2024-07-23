@@ -6,11 +6,14 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CategoryDTO {
+@Data
+public class OrderRequestDTO {
+    List<CartRequestOrderDTO> listProducts;
+    private String userName;
     private String name;
-    private List<CategoryDetailDTO> categoryDetails;
-    private String image;
+    private String address;
+    private String phone;
+    private int totalAmount;
 }

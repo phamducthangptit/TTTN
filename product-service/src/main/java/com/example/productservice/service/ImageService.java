@@ -13,4 +13,15 @@ public class ImageService {
     public Image addNewImage(Image image){
         return repository.save(image);
     }
+    public void deleteImageByProductId(int productId){
+        repository.deleteImageByProductId(productId);
+    }
+
+    public void deleteImageByProductIdAndUrl(int productId, String url){
+        repository.deleteImageByProductIdAndUrl(productId, url);
+    }
+
+    public int countImageProduct(int productId){
+        return repository.countImageProduct(productId);
+    }
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -36,5 +37,12 @@ public class User {
     @Column(name = "create_at", nullable = false)
     private LocalDateTime createAt;
 
+    @OneToMany(mappedBy = "user")
+    private List<Cart> carts;
 
+    @OneToMany(mappedBy = "user")
+    private List<Review> reviews;
+
+    @OneToMany(mappedBy = "user")
+    private List<Order> orders;
 }

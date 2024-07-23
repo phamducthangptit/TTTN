@@ -61,30 +61,33 @@ public class AdminController {
     @PostMapping("/add-employee")
     public ResponseEntity<?> addEmployee(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
                                          @RequestHeader("X-Role") String role, @RequestBody EmployeeAccountDTO employeeAccountDTO) {
-        User user = new User();
-        user.setFirstName(employeeAccountDTO.getFirstName());
-        user.setLastName(employeeAccountDTO.getLastName());
-        user.setEmail(employeeAccountDTO.getEmail());
-        user.setAddress(employeeAccountDTO.getAddress());
-        user.setPhoneNumber(employeeAccountDTO.getPhoneNumber());
-        user.setCreateAt(LocalDateTime.now());
+        if(role.equals("ADMIN")){
+            User user = new User();
+            user.setFirstName(employeeAccountDTO.getFirstName());
+            user.setLastName(employeeAccountDTO.getLastName());
+            user.setEmail(employeeAccountDTO.getEmail());
+            user.setAddress(employeeAccountDTO.getAddress());
+            user.setPhoneNumber(employeeAccountDTO.getPhoneNumber());
+            user.setCreateAt(LocalDateTime.now());
 
-        int result = accountService.createAccountAndUser(
-                user,
-                employeeAccountDTO.getRoleId(),
-                employeeAccountDTO.getUserName(),
-                employeeAccountDTO.getPassword(),
-                employeeAccountDTO.getStatus()
-        );
-        if (result == -1) {
-            ResponseDTO responseDTO = new ResponseDTO("ErrorEmail", "Email đã tồn tại");
-            return new ResponseEntity<>(responseDTO, HttpStatus.CONFLICT);
+            int result = accountService.createAccountAndUser(
+                    user,
+                    employeeAccountDTO.getRoleId(),
+                    employeeAccountDTO.getUserName(),
+                    employeeAccountDTO.getPassword(),
+                    employeeAccountDTO.getStatus()
+            );
+            if (result == -1) {
+                ResponseDTO responseDTO = new ResponseDTO("ErrorEmail", "Email đã tồn tại");
+                return new ResponseEntity<>(responseDTO, HttpStatus.CONFLICT);
+            }
+            if (result == -2) {
+                ResponseDTO responseDTO = new ResponseDTO("ErrorUserName", "UserName đã tồn tại");
+                return new ResponseEntity<>(responseDTO, HttpStatus.CONFLICT);
+            }
+            ResponseDTO responseDTO = new ResponseDTO("CreateAccountOk", "Tạo tài khoản thành công");
+            return new ResponseEntity<>(responseDTO, HttpStatus.OK);
         }
-        if (result == -2) {
-            ResponseDTO responseDTO = new ResponseDTO("ErrorUserName", "UserName đã tồn tại");
-            return new ResponseEntity<>(responseDTO, HttpStatus.CONFLICT);
-        }
-        ResponseDTO responseDTO = new ResponseDTO("CreateAccountOk", "Tạo tài khoản thành công");
-        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 }

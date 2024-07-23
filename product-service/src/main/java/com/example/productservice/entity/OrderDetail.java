@@ -5,31 +5,28 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
-@Table(name = "review")
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Review {
+@Table(name = "order_detail")
+public class OrderDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "review_id")
-    private Integer reviewId;
+    @Column(name = "order_detail_id")
+    private int orderDetailId;
 
-    @Column(name = "rating")
-    private Integer rating;
+    @Column(name = "quantity")
+    private int quantity;
 
-    @Column(name = "comment")
-    private String comment;
-
-    @Column(name = "create_at")
-    private LocalDateTime createdAt;
+    @Column(name = "price")
+    private BigDecimal price;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "order_id")
+    private Order order;
 
     @ManyToOne
     @JoinColumn(name = "product_id")

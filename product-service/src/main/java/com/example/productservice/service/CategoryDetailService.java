@@ -9,6 +9,7 @@ import com.example.productservice.repository.CategoryDetailRepository;
 import com.example.productservice.repository.CategoryRepository;
 import com.example.productservice.repository.DetailRepository;
 import jakarta.persistence.Tuple;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,7 @@ public class CategoryDetailService {
     @Autowired
     private DetailRepository detailRepository;
 
+    @Transactional
     public CategoryDetail addNewCategoryDetail(int categoryId, int detailId) {
         CategoryDetail categoryDetail = new CategoryDetail();
         categoryDetail.setCategoryDetailId(new CategoryDetailId(detailId, categoryId));

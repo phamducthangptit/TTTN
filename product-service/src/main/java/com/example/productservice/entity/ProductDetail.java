@@ -25,4 +25,14 @@ public class ProductDetail {
     @ManyToOne
     @JoinColumn(name = "detail_id", insertable = false, updatable = false)
     private Detail detail;
+
+    @Override
+    public String toString() {
+        return "ProductDetail{" +
+                "productDetailId=" + productDetailId.getProductId() + " " + productDetailId.getDetailId() +
+                ", value='" + value + '\'' +
+                ", product=" + product +
+                ", detail=" + detail +
+                '}';
+    }
 }

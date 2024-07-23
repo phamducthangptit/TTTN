@@ -11,11 +11,9 @@ import java.util.Objects;
 @Embeddable
 public class ProductDetailId implements Serializable {
     @Column(name = "product_id")
-    @Nationalized
     private int productId;
 
     @Column(name = "detail_id")
-    @Nationalized
     private int detailId;
 
     public int getProductId() {
