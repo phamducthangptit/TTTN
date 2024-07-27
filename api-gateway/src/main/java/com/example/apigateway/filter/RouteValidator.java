@@ -16,7 +16,9 @@ public class RouteValidator {
             "/api/information-service/user/reset-password",
             "/api/product-service/guest/category/get-all-category",
             "/api/product-service/guest/product/get-all-product",
-            "/api/product-service/guest/product/get-product-detail"
+            "/api/product-service/guest/product/get-product-detail",
+            "/api/product-service/guest/product/get-product-by-category",
+            "/api/product-service/guest/product/get-all-product-by-query"
     );
 
     public Predicate<ServerHttpRequest> isSecured =

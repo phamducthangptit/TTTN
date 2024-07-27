@@ -4,10 +4,7 @@ import com.example.productservice.dto.CartRequestOrderDTO;
 import com.example.productservice.dto.OrderDetailResponseDTO;
 import com.example.productservice.dto.OrderRequestDTO;
 import com.example.productservice.dto.OrderResponseDTO;
-import com.example.productservice.entity.Image;
-import com.example.productservice.entity.Order;
-import com.example.productservice.entity.OrderDetail;
-import com.example.productservice.entity.Product;
+import com.example.productservice.entity.*;
 import com.example.productservice.repository.OrderDetailRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +19,9 @@ import java.util.stream.Collectors;
 public class OrderDetailService {
     @Autowired
     private OrderDetailRepository repository;
+
+    @Autowired
+    private ReviewService reviewService;
 
     public int getQuantityProductInOrder(int productId){
         return repository.getQuantityProductInOrder(productId);
@@ -57,7 +57,15 @@ public class OrderDetailService {
         orderDetailResponseDTO.setImage(image);
         orderDetailResponseDTO.setStock(orderDetail.getQuantity());
         orderDetailResponseDTO.setPrice(orderDetail.getPrice());
+
+        int userId = orderDetail.getOrder().getUser().getUserId();
+        int productId = orderDetail.getProduct().getProductId();
+        int orderId = orderDetail.getOrder().getOrderId();
+
+        boolean hasReviewed = reviewService.hasUserReviewedProductInOrder(userId, productId, orderId);
+
         if(orderDetail.getOrder().getStatus().equals("Đã nhận hàng")) orderDetailResponseDTO.setCheckStatus(1); else  orderDetailResponseDTO.setCheckStatus(0);
+        if(orderDetail.getOrder().getStatus().equals("Hoàn thành")  && !hasReviewed) orderDetailResponseDTO.setCheckReview(1); else orderDetailResponseDTO.setCheckReview(0);
         return orderDetailResponseDTO;
     }
 }

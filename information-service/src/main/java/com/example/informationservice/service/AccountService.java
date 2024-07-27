@@ -78,4 +78,12 @@ public class AccountService {
     public void resetPassword(ResetPasswordRequest resetPasswordRequest){
         accountRepository.resetPassword(passwordEncoder.encode(resetPasswordRequest.getNewPassword()), resetPasswordRequest.getUserName());
     }
+
+    public Optional<Account> getAccountByUserName(String userName){
+        return accountRepository.findByuserName(userName);
+    }
+
+    public int getUserIdByUserName(String userName){
+        return accountRepository.getUserIdByUserName(userName);
+    }
 }

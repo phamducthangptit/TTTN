@@ -38,7 +38,7 @@ public class AdminController {
     @PostMapping("/update-status-account")
     public ResponseEntity<?> updateStatusAccount(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
                                                  @RequestHeader("X-Role") String role, @RequestBody UpdateStatusRequest updateStatusRequest) {
-        if (role.equals("ADMIN")) {
+        if (role.equals("ADMIN") || role.equals("EMPLOYEE")) {
             accountService.updateStatusAccount(updateStatusRequest);
             return new ResponseEntity<>(HttpStatus.OK);
         }

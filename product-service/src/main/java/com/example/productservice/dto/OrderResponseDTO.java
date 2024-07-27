@@ -23,6 +23,8 @@ public class OrderResponseDTO {
     private String phone;
     private int totalProduct;
     private int checkStatus;
+    private int checkStatusInvoice;
+    private int statusPayment;
 
     private String formatPrice(BigDecimal price) {
         return decimalFormat.format(price) + " VNĐ";

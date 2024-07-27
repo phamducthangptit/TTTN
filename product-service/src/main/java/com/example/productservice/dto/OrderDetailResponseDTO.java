@@ -17,6 +17,7 @@ public class OrderDetailResponseDTO {
     private int stock;
     private int checkStatus;
     private String price;
+    private int checkReview;
     private String formatPrice(BigDecimal price) {
         return decimalFormat.format(price) + " VNĐ";
     }

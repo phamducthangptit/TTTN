@@ -15,6 +15,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query("SELECT p FROM Product p WHERE p.category.categoryId = :categoryId")
     List<Product> getAllProductByCategoryId(@Param("categoryId") int categoryId);
 
+    @Query("SELECT p FROM Product p WHERE p.category.name LIKE %:query% OR p.name LIKE %:query%")
+    List<Product> getProductByQuery(@Param("query") String query);
+
+
     Optional<Product> findByproductId(int id);
 
     @Modifying
@@ -32,4 +36,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     @Query("SELECT p.stock FROM Product p WHERE p.productId = :productId")
     int getStockProduct(@Param("productId") int productId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Product p SET p.stock = p.stock - :quantity WHERE p.productId = :productId")
+    void updateStockProduct(@Param("quantity") int quantity, @Param("productId") int productId);
+
 }

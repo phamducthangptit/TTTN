@@ -21,9 +21,10 @@ public class GuestController {
     private CartService cartService;
     @Autowired
     private OrderService orderService;
-
     @Autowired
     private OrderDetailService orderDetailService;
+    @Autowired
+    private ReviewService reviewService;
 
     @GetMapping("/category/get-all-category")
     public ResponseEntity<?> getAllCategory() {
@@ -37,6 +38,16 @@ public class GuestController {
     @GetMapping("/product/get-all-product")
     public ResponseEntity<?> getAllProduct() {
         return new ResponseEntity<>(productService.getAllProduct(), HttpStatus.OK);
+    }
+
+    @GetMapping("/product/get-all-product-by-query")
+    public ResponseEntity<?> getAllProductByQuery(@RequestParam("query") String query){
+        return new ResponseEntity<>(productService.getAllProductByQuery(query), HttpStatus.OK);
+    }
+
+    @GetMapping("/product/get-product-by-category")
+    public ResponseEntity<?> getProductByDetail(@RequestParam("category-id") int categoryId){
+        return new ResponseEntity<>(productService.getAllProductByCategoryId(categoryId), HttpStatus.OK);
     }
 
     @GetMapping("/product/get-product-detail")
@@ -99,17 +110,20 @@ public class GuestController {
     @PostMapping("/order/add-new-order")
     public ResponseEntity<?> addNewOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
                                          @RequestHeader("X-Role") String role, @RequestBody OrderRequestDTO orderRequestDTO) {
-        if(role.equals("GUEST")){
-            orderService.addOrderGuest(orderRequestDTO);
-            return new ResponseEntity<>(HttpStatus.OK);
+        if (role.equals("GUEST")) {
+            int result = orderService.addOrderGuest(orderRequestDTO);
+            if(result != 0)
+                return new ResponseEntity<>(new ResponseDTO("OrderOk", result + ""), HttpStatus.OK);
+            else
+                return new ResponseEntity<>(new ResponseDTO("OrderError", result + ""), HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
     @GetMapping("/order/get-all-order")
     public ResponseEntity<?> getAllOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                         @RequestHeader("X-Role") String role, @RequestParam("username") String userName){
-        if(role.equals("GUEST")){
+                                         @RequestHeader("X-Role") String role, @RequestParam("username") String userName) {
+        if (role.equals("GUEST")) {
             return new ResponseEntity<>(orderService.getAllOrderByUserName(userName), HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -117,17 +131,35 @@ public class GuestController {
 
     @GetMapping("/order/get-detail-order")
     public ResponseEntity<?> getDetailOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                            @RequestHeader("X-Role") String role, @RequestParam("order-id") int orderId){
-        if(role.equals("GUEST"))
+                                            @RequestHeader("X-Role") String role, @RequestParam("order-id") int orderId) {
+        if (role.equals("GUEST"))
             return new ResponseEntity<>(orderDetailService.getOrderDetail(orderId), HttpStatus.OK);
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
     @PostMapping("/order/update-status-order")
     public ResponseEntity<?> guestUpdateStatusOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                                    @RequestHeader("X-Role") String role, @RequestBody OrderIdDTO orderIdDTO){
-        if(role.equals("GUEST")){
+                                                    @RequestHeader("X-Role") String role, @RequestBody OrderIdDTO orderIdDTO) {
+        if (role.equals("GUEST")) {
             orderService.guestUpdateStatusOrder(orderIdDTO.getOrderId());
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @PostMapping("/review/add-review")
+    public ResponseEntity<?> addReview(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                       @RequestHeader("X-Role") String role, @RequestBody ReviewRequestDTO reviewRequestDTO) {
+        if(role.equals("GUEST")){
+            return new ResponseEntity<>(reviewService.addNewReview(reviewRequestDTO), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+    @PostMapping("/payment/update-status-payment")
+    public ResponseEntity<?> updateStatusPayment(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+                                                 @RequestHeader("X-Role") String role, @RequestBody PaymentRequest paymentRequest){
+        if(role.equals("GUEST")){
+            orderService.updateStatusPayment(paymentRequest.getOrderId());
             return new ResponseEntity<>(HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);

@@ -23,6 +23,8 @@ public class ProductResponseDTO {
     private String price;
     private Integer stock;
     private List<String> image;
+    private int countSales;
+    private BigDecimal priceSale;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
     private LocalDateTime createAt;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")

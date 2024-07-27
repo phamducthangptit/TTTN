@@ -38,10 +38,16 @@ public class Order {
     @Column(name = "consignee_name")
     private String consigneeName;
 
+    @Column(name = "status_payment")
+    private int statusPayment;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
     @OneToMany(mappedBy = "order")
     private List<OrderDetail> orderDetails;
+
+    @OneToMany(mappedBy = "order")
+    private List<Review> reviews;
 }

@@ -36,7 +36,9 @@ public class AuthConfig {
                                 "/api/information-service/user/reset-password",
                                 "/api/product-service/guest/category/get-all-category",
                                 "/api/product-service/guest/product/get-all-product",
-                                "/api/product-service/guest/product/get-product-detail").permitAll()
+                                "/api/product-service/guest/product/get-all-product-by-query",
+                                "/api/product-service/guest/product/get-product-detail",
+                                "/api/product-service/guest/product/get-product-by-category").permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults()).build();

@@ -3,6 +3,7 @@ package com.example.informationservice.controller;
 import com.example.informationservice.dto.ChangePasswordDTO;
 import com.example.informationservice.dto.ResetPasswordRequest;
 import com.example.informationservice.dto.ResponseDTO;
+import com.example.informationservice.dto.UserDTO;
 import com.example.informationservice.service.AccountService;
 import com.example.informationservice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,5 +39,16 @@ public class UserController {
         if(x == 1)
             return new ResponseEntity<>(new ResponseDTO("resetPasswordOk", "Thay đổi mật khẩu thành công"), HttpStatus.OK);
         return new ResponseEntity<>(new ResponseDTO("resetPasswordFail", "Tên đăng nhập hoặc email không đúng"), HttpStatus.BAD_REQUEST);
+    }
+
+    @GetMapping("/get-information")
+    public ResponseEntity<?> getInformation(@RequestParam("user-name") String userName){
+        return new ResponseEntity<>(userService.getInformationUser(userName), HttpStatus.OK);
+    }
+
+    @PostMapping("/update-information")
+    public ResponseEntity<?> updateInformation(@RequestBody UserDTO userDTO){
+        userService.updateInformation(userDTO);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

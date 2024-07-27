@@ -46,6 +46,9 @@ import java.util.stream.Collectors;
     public List<ProductResponseDTO> getAllProduct(){
         return repository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
+    public List<ProductResponseDTO> getAllProductByQuery(String query){
+        return repository.getProductByQuery(query).stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
 
     public ProductDetailResponseDTO getProductById(int productId) {
         Optional<Product> object = repository.findByproductId(productId);
@@ -138,6 +141,8 @@ import java.util.stream.Collectors;
         productResponseDTO.setCategoryName(product.getCategory().getName());
         productResponseDTO.setPrice(product.getPrice());
         productResponseDTO.setStock(product.getStock());
+        productResponseDTO.setPriceSale(product.getPrice());
+        productResponseDTO.setCountSales(countSales(product.getOrderDetails(), product.getProductId()));
         String image = product.getImages().stream()
                 .filter(img -> img.isAvatar()) // Lọc các ảnh có avatar là true
                 .findFirst() // Lấy ảnh đầu tiên thỏa mãn điều kiện
@@ -191,12 +196,17 @@ import java.util.stream.Collectors;
         return productResponseDTO;
     }
 
+    public void updateStockProduct(int quantity, int productId){
+        repository.updateStockProduct(quantity, productId);
+    }
+
     @Transactional
     public void updateProduct(ProductRequestUpdateDTO productRequestUpdateDTO) {
         // đây là sản phẩm chưa cập nhật trong db
         ProductDetailResponseDTO productDetailResponseDTO = convertToProductDetailDTO(repository.findByproductId(productRequestUpdateDTO.getProductId()).get());
 
         System.out.println(productDetailResponseDTO.getListDetail().toString());
+        System.out.println(productRequestUpdateDTO.getProductDetails().toString());
         // update các thuôộc tính khác
         repository.updateProduct(productRequestUpdateDTO.getName(), BigDecimal.valueOf(Integer.parseInt(productRequestUpdateDTO.getPrice())),
                 Integer.parseInt(productRequestUpdateDTO.getStock()), productRequestUpdateDTO.getDescription(), productRequestUpdateDTO.getCategoryId(),
@@ -235,6 +245,25 @@ import java.util.stream.Collectors;
                 productDetailService.updateProductDetail(productRequestUpdateDTO.getProductId(),
                         productDetailRequestDTO.getDetailId(),
                         productDetailRequestDTO.getValue());
+            }
+            // nếu có thuoc tinh moi thi them
+            for(ProductDetailRequestDTO productDetailRequestDTO : productRequestUpdateDTO.getProductDetails()){
+                if(!productDetailResponseDTO.getListDetail().contains(productDetailRequestDTO)){
+
+                    ProductDetail productDetail = new ProductDetail();
+                    ProductDetailId productDetailId = new ProductDetailId();
+
+                    productDetailId.setProductId(productRequestUpdateDTO.getProductId());
+                    System.out.println(productRequestUpdateDTO.getProductId());
+                    productDetailId.setDetailId(productDetailRequestDTO.getDetailId());
+                    System.out.println(productDetailRequestDTO.getDetailId());
+
+
+                    productDetail.setProductDetailId(productDetailId);
+                    productDetail.setValue(productDetailRequestDTO.getValue());
+
+                    productDetailService.addNewProductDetail(productDetail);
+                }
             }
         }
 
