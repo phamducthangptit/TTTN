@@ -25,12 +25,12 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Transactional
     @Modifying
-    @Query("UPDATE Order o SET o.statusPayment = 1 WHERE o.orderId = :orderId")
-    void updateStatusPayment(@Param("orderId") int orderId);
+    @Query("UPDATE Order o SET o.statusPayment = :statusPayment WHERE o.orderId = :orderId")
+    void updateStatusPayment(@Param("orderId") int orderId, @Param("statusPayment") int statusPayment);
 
     @Query("SELECT o.orderDate, SUM(o.totalAmount) " +
             "FROM Order o " +
-            "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
+            "WHERE o.orderDate BETWEEN :startDate AND :endDate AND o.statusPayment = 1" +
             "GROUP BY o.orderDate " +
             "ORDER BY o.orderDate")
     List<Object[]> getRevenueForDateRange(@Param("startDate") LocalDateTime startDate,
@@ -40,7 +40,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             "       EXTRACT(WEEK FROM o.orderDate) AS week, " +
             "       SUM(o.totalAmount) " +
             "FROM Order o " +
-            "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
+            "WHERE o.orderDate BETWEEN :startDate AND :endDate AND o.statusPayment = 1" +
             "GROUP BY EXTRACT(YEAR FROM o.orderDate), EXTRACT(WEEK FROM o.orderDate) " +
             "ORDER BY year, week")
     List<Object[]> getRevenueForWeekRange(@Param("startDate") LocalDateTime startDate,
@@ -50,7 +50,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             "       EXTRACT(MONTH FROM o.orderDate) AS month, " +
             "       SUM(o.totalAmount) " +
             "FROM Order o " +
-            "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
+            "WHERE o.orderDate BETWEEN :startDate AND :endDate AND o.statusPayment = 1" +
             "GROUP BY EXTRACT(YEAR FROM o.orderDate), EXTRACT(MONTH FROM o.orderDate) " +
             "ORDER BY year, month")
     List<Object[]> getRevenueForMonthRange(@Param("startDate") LocalDateTime startDate,

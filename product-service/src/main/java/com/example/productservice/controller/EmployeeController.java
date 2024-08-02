@@ -236,7 +236,7 @@ public class EmployeeController {
     public ResponseEntity<?> updateStatusOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
                                                @RequestHeader("X-Role") String role, @RequestBody OrderIdDTO orderIdDTO){
         if(role.equals("EMPLOYEE")){
-            orderService.employeeUpdateStatusOrder(orderIdDTO.getOrderId());
+            orderService.employeeUpdateStatusOrder(orderIdDTO);
             return new ResponseEntity<>(HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);

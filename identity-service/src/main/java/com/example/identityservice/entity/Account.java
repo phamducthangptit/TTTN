@@ -36,6 +36,7 @@ public class Account {
     @Column(name = "status", nullable = false)
     private int status;
 
+
     @Column(name = "create_at", nullable = false)
     private LocalDateTime createAt;
 }

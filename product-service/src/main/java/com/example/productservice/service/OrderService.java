@@ -124,18 +124,27 @@ public class OrderService {
         return productResponseOrderDTO;
     }
 
-    public void employeeUpdateStatusOrder(int orderId){
-        repository.updateStatusOrder(orderId, "Đã xác nhận");
+    public void employeeUpdateStatusOrder(OrderIdDTO orderIdDTO){
+        if(orderIdDTO.getType() == 1){
+            repository.updateStatusOrder(orderIdDTO.getOrderId(), "Đã xác nhận");
+        }
     }
 
     @Transactional
-    public void guestUpdateStatusOrder(int orderId){
-        repository.updateStatusPayment(orderId);
-        repository.updateStatusOrder(orderId, "Hoàn thành");
+    public void guestUpdateStatusOrder(OrderIdDTO orderIdDTO){
+        if(orderIdDTO.getType() == 1){// chuyển trạng thái sang hoàn thành
+            repository.updateStatusPayment(orderIdDTO.getOrderId(), 1);
+            repository.updateStatusOrder(orderIdDTO.getOrderId(), "Hoàn thành");
+        }
+
+        if(orderIdDTO.getType() == 2){// chuyển trạng thái sang hủy
+            repository.updateStatusPayment(orderIdDTO.getOrderId(), 0);
+            repository.updateStatusOrder(orderIdDTO.getOrderId(), "Hủy");
+        }
     }
 
     public void updateStatusPayment(int orderId){
-        repository.updateStatusPayment(orderId);
+        repository.updateStatusPayment(orderId, 1);
     }
 
     private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
@@ -349,6 +358,7 @@ public class OrderService {
         statusCounts.put("Mới", 0L);
         statusCounts.put("Đã xác nhận", 0L);
         statusCounts.put("Hoàn thành", 0L);
+        statusCounts.put("Hủy", 0L);
         return statusCounts;
     }
 }

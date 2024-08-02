@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @Data
 public class OrderIdDTO {
     private int orderId;
+    private int type;
 }

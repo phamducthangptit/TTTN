@@ -141,7 +141,7 @@ public class GuestController {
     public ResponseEntity<?> guestUpdateStatusOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
                                                     @RequestHeader("X-Role") String role, @RequestBody OrderIdDTO orderIdDTO) {
         if (role.equals("GUEST")) {
-            orderService.guestUpdateStatusOrder(orderIdDTO.getOrderId());
+            orderService.guestUpdateStatusOrder(orderIdDTO);
             return new ResponseEntity<>(HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
