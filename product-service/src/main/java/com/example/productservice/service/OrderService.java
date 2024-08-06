@@ -49,6 +49,13 @@ public class OrderService {
     }
     @Transactional
     public int addOrderGuest(OrderRequestDTO orderRequestDTO){
+        // check số lượng còn lại của sản phẩm
+        List<CartRequestOrderDTO> cartRequestOrderDTOList = orderRequestDTO.getListProducts();
+        for(CartRequestOrderDTO cartRequestOrderDTO : cartRequestOrderDTOList){
+            if(productService.getStockProduct(cartRequestOrderDTO.getProductId()) < cartRequestOrderDTO.getQuantity()){
+                return -1; // có 1 sản phẩm đã hết
+            }
+        }
         // add khóa chính trước --> add order
         Order order = addNewOrder(orderRequestDTO);
         if(order != null){
@@ -137,9 +144,15 @@ public class OrderService {
             repository.updateStatusOrder(orderIdDTO.getOrderId(), "Hoàn thành");
         }
 
-        if(orderIdDTO.getType() == 2){// chuyển trạng thái sang hủy
+        if(orderIdDTO.getType() == 2){// chuyển trạng thái sang hủy, nếu hủy thì cộng lại số lượng sản phẩm
             repository.updateStatusPayment(orderIdDTO.getOrderId(), 0);
             repository.updateStatusOrder(orderIdDTO.getOrderId(), "Hủy");
+            // cộng lại số lượng sản phẩm
+            Order order = repository.findByorderId(orderIdDTO.getOrderId());
+            List<OrderDetail> orderDetails = order.getOrderDetails();
+            for(OrderDetail orderDetail : orderDetails){
+                productService.updateStockProduct(- orderDetail.getQuantity(), orderDetail.getProduct().getProductId());
+            }
         }
     }
 

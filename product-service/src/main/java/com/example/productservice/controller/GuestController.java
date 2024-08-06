@@ -41,12 +41,12 @@ public class GuestController {
     }
 
     @GetMapping("/product/get-all-product-by-query")
-    public ResponseEntity<?> getAllProductByQuery(@RequestParam("query") String query){
+    public ResponseEntity<?> getAllProductByQuery(@RequestParam("query") String query) {
         return new ResponseEntity<>(productService.getAllProductByQuery(query), HttpStatus.OK);
     }
 
     @GetMapping("/product/get-product-by-category")
-    public ResponseEntity<?> getProductByDetail(@RequestParam("category-id") int categoryId){
+    public ResponseEntity<?> getProductByDetail(@RequestParam("category-id") int categoryId) {
         return new ResponseEntity<>(productService.getAllProductByCategoryId(categoryId), HttpStatus.OK);
     }
 
@@ -112,10 +112,10 @@ public class GuestController {
                                          @RequestHeader("X-Role") String role, @RequestBody OrderRequestDTO orderRequestDTO) {
         if (role.equals("GUEST")) {
             int result = orderService.addOrderGuest(orderRequestDTO);
-            if(result != 0)
+            if (result != 0 && result != -1) // order thành công
                 return new ResponseEntity<>(new ResponseDTO("OrderOk", result + ""), HttpStatus.OK);
-            else
-                return new ResponseEntity<>(new ResponseDTO("OrderError", result + ""), HttpStatus.BAD_REQUEST);
+            if (result == -1)
+                return new ResponseEntity<>(new ResponseDTO("OrderError", "Vui lòng kiểm tra lại sản phẩm, có sản phẩm đã hết hàng!"), HttpStatus.CONFLICT);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
@@ -150,15 +150,16 @@ public class GuestController {
     @PostMapping("/review/add-review")
     public ResponseEntity<?> addReview(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
                                        @RequestHeader("X-Role") String role, @RequestBody ReviewRequestDTO reviewRequestDTO) {
-        if(role.equals("GUEST")){
+        if (role.equals("GUEST")) {
             return new ResponseEntity<>(reviewService.addNewReview(reviewRequestDTO), HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
+
     @PostMapping("/payment/update-status-payment")
     public ResponseEntity<?> updateStatusPayment(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                                 @RequestHeader("X-Role") String role, @RequestBody PaymentRequest paymentRequest){
-        if(role.equals("GUEST")){
+                                                 @RequestHeader("X-Role") String role, @RequestBody PaymentRequest paymentRequest) {
+        if (role.equals("GUEST")) {
             orderService.updateStatusPayment(paymentRequest.getOrderId());
             return new ResponseEntity<>(HttpStatus.OK);
         }

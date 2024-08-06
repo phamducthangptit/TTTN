@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Integer> {
+
+    Order findByorderId(int orderId);
     @Query("SELECT o FROM Order o WHERE o.user.userId = :userId ORDER BY o.orderDate DESC")
     List<Order> findAllByUserIdOrderByOrderDateDesc(@Param("userId") int userId);
 

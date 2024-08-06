@@ -32,7 +32,6 @@ public class UserController {
             return new ResponseEntity<>(new ResponseDTO("ErrorRepeatPassword", "Mật khẩu mới không được trùng với mật khẩu cũ"), HttpStatus.CONFLICT);
         return new ResponseEntity<>(new ResponseDTO("ErrorAccount", "UserName not found"), HttpStatus.BAD_REQUEST);
     }
-
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest){
         int x = userService.resetPassword(resetPasswordRequest);
