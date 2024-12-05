@@ -12,10 +12,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer> {
-    @Query("SELECT p FROM Product p WHERE p.category.categoryId = :categoryId")
+    @Query("SELECT p FROM Product p WHERE p.category.categoryId = :categoryId AND p.isPresent = 1")
     List<Product> getAllProductByCategoryId(@Param("categoryId") int categoryId);
 
-    @Query("SELECT p FROM Product p WHERE p.category.name LIKE %:query% OR p.name LIKE %:query%")
+    @Query("SELECT p FROM Product p WHERE p.isPresent = 1")
+    List<Product> getAllProductByIsPresent();
+
+    @Query("SELECT p FROM Product p WHERE (p.isPresent = 1) AND (p.category.name LIKE %:query% OR p.name LIKE %:query%)")
     List<Product> getProductByQuery(@Param("query") String query);
 
 
@@ -28,9 +31,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE Product p SET p.name = :name, p.price = :price, p.stock = :stock, p.description = :description, p.category.categoryId = :categoryId, " +
+    @Query("UPDATE Product p SET p.name = :name, p.description = :description, p.category.categoryId = :categoryId, " +
             "p.manufacturer.manufacturerId = :manufacturerId WHERE p.productId = :productId")
-    void updateProduct(@Param("name") String name, @Param("price") BigDecimal price, @Param("stock") int stock,
+    void updateProduct(@Param("name") String name,
                        @Param("description") String description, @Param("categoryId") int categoryId,
                        @Param("manufacturerId") int manufacturerId, @Param("productId") int productId);
 
@@ -41,5 +44,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Transactional
     @Query("UPDATE Product p SET p.stock = p.stock - :quantity WHERE p.productId = :productId")
     void updateStockProduct(@Param("quantity") int quantity, @Param("productId") int productId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Product p SET p.isPresent = :isPresent WHERE p.productId = :productId")
+    void updateIsPresent(@Param("isPresent") int isPresent, @Param("productId") int productId);
 
 }

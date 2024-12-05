@@ -29,11 +29,23 @@ public class Product {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "price")
-    private BigDecimal price;
-
     @Column(name = "stock")
     private Integer stock;
+
+    @Column(name = "weight")
+    private Integer weight;
+
+    @Column(name = "length")
+    private Integer length;
+
+    @Column(name = "width")
+    private Integer width;
+
+    @Column(name = "height")
+    private Integer height;
+
+    @Column(name = "is_present")
+    private Integer isPresent;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
     @Column(name = "create_at")
@@ -58,12 +70,11 @@ public class Product {
     private List<Image> images;
 
     @OneToMany(mappedBy = "product")
-    private List<Review> reviews;
-
-    @OneToMany(mappedBy = "product")
     private List<Cart> carts;
 
     @OneToMany(mappedBy = "product")
     private List<OrderDetail> orderDetails;
 
+    @OneToMany(mappedBy = "product")
+    private List<PriceDetail> priceDetails;
 }

@@ -1,0 +1,70 @@
+GET http://localhost:8080/api/import-goods-service/employee/detail-goods-receipt?goods-receipt-id=19
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.2.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+<> 2024-10-09T115858.500.json
+
+###
+
+GET http://localhost:8080/api/import-goods-service/employee/detail-goods-receipt?goods-receipt-id=0
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.2.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+<> 2024-10-09T115856.500.json
+
+###
+
+GET http://localhost:8080/api/import-goods-service/employee/detail-goods-receipt?goods-receipt-id=89
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.2.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+<> 2024-10-09T115855.500.json
+
+###
+
+GET http://localhost:8080/api/import-goods-service/employee/detail-goods-receipt?goods-receipt-id=88
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.2.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+<> 2024-10-09T115844.500.json
+
+###
+
+GET http://localhost:8080/api/import-goods-service/employee/detail-goods-receipt?goods-receipt-id=7
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.2.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+<> 2024-10-09T115842.500.json
+
+###
+
+GET http://localhost:8080/api/import-goods-service/employee/detail-goods-receipt?goods-receipt-id=36
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.2.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+<> 2024-10-09T115723.500.json
+
+###
+
+GET http://localhost/api/import-goods-service/employee/detail-goods-receipt?goods-receipt-id=24
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.2.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+content-length: 0
+
+<> 2024-10-09T115701.404.html
+
+###
+

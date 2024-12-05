@@ -18,7 +18,6 @@ public class GuestDTO {
     private String firstName;
     private String lastName;
     private String email;
-    private String address;
     private String phoneNumber;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
     private LocalDateTime createAt;

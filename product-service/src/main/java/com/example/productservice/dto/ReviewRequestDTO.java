@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class ReviewRequestDTO {
     private int ratting;
     private String userName;
-    private int productId;
+    private int orderDetailId;
     private String comment;
     private LocalDateTime createAt;
     private int orderId;

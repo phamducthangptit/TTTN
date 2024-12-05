@@ -15,20 +15,24 @@ import java.time.LocalDateTime;
 @Table(name = "account")
 public class Account {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "account_id")
-    private int account_id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int accountId;
+
+    @Column(name = "user_name", unique = true)
+    private String userName;
 
     @OneToOne
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JoinColumn(name = "user_name", referencedColumnName = "user_name", insertable = false, updatable = false)
     private User user;
+
+    @OneToOne
+    @JoinColumn(name = "user_name", referencedColumnName = "user_name", insertable = false, updatable = false)
+    private Staff staff;
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
-
-    @Column(name = "user_name", nullable = false, unique = true)
-    private String userName;
 
     @Column(name = "password", nullable = false)
     private String password;
@@ -36,7 +40,6 @@ public class Account {
     @Column(name = "status", nullable = false)
     private int status;
 
-
-    @Column(name = "create_at", nullable = false)
+    @Column(name = "create_at")
     private LocalDateTime createAt;
 }

@@ -32,27 +32,29 @@ public class AccountService {
     private JwtService jwtService;
 
     @Transactional
-    public int createAccountAndUser(User user, int roleId, String userName, String password, int status) {
+    public int createAccountAndUser(User user, int roleId, String password, int status) {
         Role role = roleRepository.findById(roleId).orElseThrow(() -> new IllegalArgumentException("Role not found"));
+        System.out.println(user.getEmail().getClass());
         Optional<User> searchUserByEmail = userRepository.findByemail(user.getEmail());
-        Optional<Account> searchAccountByUserName = accountRepository.findByuserName(userName);
+        Optional<Account> searchAccountByUserName = accountRepository.findByUserName(user.getUserName());
         if (searchUserByEmail.isPresent()) {
             return -1;
         }
         if (searchAccountByUserName.isPresent()) {
             return -2;
         }
-        user = userRepository.save(user);
 
         Account account = new Account();
-        account.setUser(user);
         account.setRole(role);
-        account.setUserName(userName);
+        account.setUserName(user.getUserName());
         account.setPassword(passwordEncoder.encode(password));
         account.setStatus(status);
         account.setCreateAt(LocalDateTime.now());
 
-        accountRepository.save(account);
+        accountRepository.save(account); // lưu account trước rồi lưu user sau
+        user = userRepository.save(user);
+        account.setUser(user);
+
         return 1;
     }
 

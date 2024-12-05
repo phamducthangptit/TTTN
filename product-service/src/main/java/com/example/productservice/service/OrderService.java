@@ -31,6 +31,8 @@ public class OrderService {
     private CartService cartService;
     @Autowired
     private ProductService productService;
+    @Autowired
+    private AddressService addressService;
 
 
     public Order addNewOrder(OrderRequestDTO orderRequestDTO){
@@ -40,7 +42,8 @@ public class OrderService {
         user.setUserId(userId);
         order.setUser(user);
         order.setConsigneeName(orderRequestDTO.getName());
-        order.setTotalAmount(BigDecimal.valueOf(orderRequestDTO.getTotalAmount()));
+        order.setTotalCostOfGoods(orderRequestDTO.getTotalCostOfGoods());
+        order.setShippingFee(orderRequestDTO.getShippingFee());
         order.setAddress(orderRequestDTO.getAddress());
         order.setStatus("Mới");
         order.setPhone(orderRequestDTO.getPhone());
@@ -62,6 +65,16 @@ public class OrderService {
             // add khóa phụ sau
             orderDetailService.addNewOrderDetail(orderRequestDTO, order);
         }
+        int userId = accountService.getUserId(orderRequestDTO.getUserName());
+        // addAddress
+        AddressRequestDTO addressRequestDTO = new AddressRequestDTO();
+        addressRequestDTO.setUserId(userId);
+        addressRequestDTO.setHouseNumber(orderRequestDTO.getHouseNumber());
+        addressRequestDTO.setProvinceCode(orderRequestDTO.getProvinceCode());
+        addressRequestDTO.setDistrictCode(orderRequestDTO.getDistrictCode());
+        addressRequestDTO.setWardCode(orderRequestDTO.getWardCode());
+        addressService.saveNewAddress(addressRequestDTO);
+
         // delete product in cart
         for (CartRequestOrderDTO cartRequestOrderDTO : orderRequestDTO.getListProducts()){
             cartService.deleteProductInCart(orderRequestDTO.getUserName(), cartRequestOrderDTO.getProductId());
@@ -79,14 +92,13 @@ public class OrderService {
     private OrderResponseDTO convertToDTO(Order order) {
         OrderResponseDTO orderResponseDTO = new OrderResponseDTO();
         orderResponseDTO.setOrderId(order.getOrderId());
-        orderResponseDTO.setTotalAmountPaid(order.getTotalAmount());
+        orderResponseDTO.setTotalAmountPaid(order.getTotalCostOfGoods());
         orderResponseDTO.setOrderDate(order.getOrderDate());
         orderResponseDTO.setStatus(order.getStatus());
         orderResponseDTO.setAddress(order.getAddress());
         orderResponseDTO.setPhone(order.getPhone());
         orderResponseDTO.setTotalProduct(totalProduct(order.getOrderDetails()));
         if(order.getStatus().equals("Đã xác nhận")) orderResponseDTO.setCheckStatus(1); else orderResponseDTO.setCheckStatus(0);
-        if(order.getStatus().equals("Mới")) orderResponseDTO.setCheckStatusInvoice(0); else orderResponseDTO.setCheckStatusInvoice(1);
         orderResponseDTO.setStatusPayment(order.getStatusPayment());
         return orderResponseDTO;
     }
@@ -106,7 +118,7 @@ public class OrderService {
     public OrderResponseEmployeeDTO convertOrderEmployeeToDTO(Order order) {
         OrderResponseEmployeeDTO orderResponseEmployeeDTO = new OrderResponseEmployeeDTO();
         orderResponseEmployeeDTO.setOrderId(order.getOrderId());
-        orderResponseEmployeeDTO.setTotalAmountPaid(order.getTotalAmount());
+        orderResponseEmployeeDTO.setTotalAmountPaid(order.getTotalCostOfGoods());
         orderResponseEmployeeDTO.setOrderDate(order.getOrderDate());
         orderResponseEmployeeDTO.setConsigneeName(order.getConsigneeName());
         orderResponseEmployeeDTO.setAddress(order.getAddress());
@@ -120,7 +132,7 @@ public class OrderService {
         ProductResponseOrderDTO productResponseOrderDTO = new ProductResponseOrderDTO();
         productResponseOrderDTO.setProductId(orderDetail.getProduct().getProductId());
         productResponseOrderDTO.setName(orderDetail.getProduct().getName());
-        productResponseOrderDTO.setPrice(orderDetail.getProduct().getPrice());
+//        productResponseOrderDTO.setPrice(orderDetail.getProduct().getPrice());
         String image = orderDetail.getProduct().getImages().stream()
                 .filter(img -> img.isAvatar()) // Lọc các ảnh có avatar là true
                 .findFirst() // Lấy ảnh đầu tiên thỏa mãn điều kiện
@@ -160,218 +172,41 @@ public class OrderService {
         repository.updateStatusPayment(orderId, 1);
     }
 
-    private static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
-
-    public Map<String, BigDecimal> getRevenueForThisWeek() {
-        ZonedDateTime now = ZonedDateTime.now(VIETNAM_ZONE);
-
-        // Xác định ngày bắt đầu và kết thúc tuần hiện tại
-        ZonedDateTime startOfWeek = now.with(WeekFields.of(Locale.getDefault()).dayOfWeek(), 1)
-                .withHour(0).withMinute(0).withSecond(0).withNano(0);
-        ZonedDateTime endOfWeek = startOfWeek.plusDays(6)
-                .withHour(23).withMinute(59).withSecond(59).withNano(999999999);
-
-        // Chuyển đổi thành LocalDateTime
-        LocalDateTime startDateTime = startOfWeek.toLocalDateTime();
-        LocalDateTime endDateTime = endOfWeek.toLocalDateTime();
-
-        // Tạo danh sách các ngày trong tuần hiện tại
-        Map<String, BigDecimal> revenueMap = new LinkedHashMap<>();
-        for (int i = 0; i < 7; i++) {
-            LocalDate date = startOfWeek.toLocalDate().plusDays(i);
-            revenueMap.put(date.toString(), BigDecimal.ZERO);
+    public RevenueResponseDTO getRevenue(RevenueRequestDTO revenueRequestDTO){
+        List<Object[]> statistics = repository.getDailyCompletedOrderStatistics(revenueRequestDTO.getStartDate(), revenueRequestDTO.getEndDate());
+        RevenueResponseDTO revenueResponseDTO = new RevenueResponseDTO();
+        List<RevenueDay> listRevenue = new ArrayList<>();
+        BigDecimal revenue = BigDecimal.valueOf(0);
+        for (Object[] record : statistics) {
+            RevenueDay revenueDay = new RevenueDay();
+            revenueDay.setDate((LocalDate) record[0]);
+            revenueDay.setRevenue((BigDecimal) record[1]);
+            listRevenue.add(revenueDay);
+            revenue = revenue.add((BigDecimal) record[1]);
         }
-
-        // Lấy doanh thu từ cơ sở dữ liệu
-        List<Object[]> results = repository.getRevenueForDateRange(startDateTime, endDateTime);
-
-        for (Object[] result : results) {
-            LocalDate date = ((LocalDateTime) result[0]).toLocalDate();
-            BigDecimal revenue = (BigDecimal) result[1];
-            revenueMap.put(date.toString(), revenueMap.getOrDefault(date.toString(), BigDecimal.ZERO).add(revenue));
-        }
-
-        return revenueMap;
+        revenueResponseDTO.setRevenue(revenue);
+        revenueResponseDTO.setListRevenueDay(listRevenue);
+        return revenueResponseDTO;
     }
 
-    public Map<String, BigDecimal> getRevenueForLast5Weeks() {
-        ZonedDateTime now = ZonedDateTime.now(VIETNAM_ZONE);
-        ZonedDateTime startDate = now.minusWeeks(4).with(WeekFields.of(Locale.getDefault()).dayOfWeek(), 1)
-                .withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime startDateTime = startDate.toLocalDateTime();
+    public OrderStatisticsDTO getOrderStatistic(RevenueRequestDTO revenueRequestDTO){
+        OrderStatisticsDTO orderStatisticsDTO = new OrderStatisticsDTO();
+        List<Object[]> result = repository.getOrderStatistics(revenueRequestDTO.getStartDate(), revenueRequestDTO.getEndDate());
+        Object[] tmp = result.get(0);
+        System.out.println(Arrays.deepToString(tmp));
+        // Chuyển tmp[0] (Long) thành int
+        orderStatisticsDTO.setCompletedOrders(((Number) tmp[0]).intValue());
 
-        // Tạo danh sách các tuần trong 5 tuần qua
-        Map<String, BigDecimal> revenueMap = new LinkedHashMap<>();
-        WeekFields weekFields = WeekFields.of(Locale.getDefault());
-        for (int i = 0; i < 5; i++) {
-            LocalDate startOfWeek = startDate.toLocalDate().plusWeeks(i).with(DayOfWeek.MONDAY);
-            LocalDate endOfWeek = startOfWeek.plusDays(6);
-            String week = startOfWeek.getYear() + "-W" + startOfWeek.get(weekFields.weekOfWeekBasedYear());
-            revenueMap.put(week, BigDecimal.ZERO);
-        }
+        // Chuyển tmp[1] (Long) thành int
+        orderStatisticsDTO.setNewOrders(((Number) tmp[1]).intValue());
 
-        List<Object[]> results = repository.getRevenueForWeekRange(startDateTime, now.toLocalDateTime());
-
-        for (Object[] result : results) {
-            int year = (int) result[0];
-            int week = (int) result[1];
-            BigDecimal revenue = (BigDecimal) result[2];
-            String weekString = year + "-W" + week;
-            revenueMap.put(weekString, revenue);
-        }
-
-        return revenueMap;
+        // Chuyển tmp[2] (Long) thành int
+        orderStatisticsDTO.setCancelledOrders(((Number) tmp[2]).intValue());
+        return orderStatisticsDTO;
     }
 
-    public Map<String, BigDecimal> getRevenueForLast3Months() {
-        ZonedDateTime now = ZonedDateTime.now(VIETNAM_ZONE);
-        ZonedDateTime startDate = now.minusMonths(2).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime startDateTime = startDate.toLocalDateTime();
-
-        // Tạo danh sách các tháng trong 3 tháng qua
-        Map<String, BigDecimal> revenueMap = new LinkedHashMap<>();
-        for (int i = 0; i < 3; i++) {
-            LocalDate monthStart = startDate.toLocalDate().plusMonths(i).withDayOfMonth(1);
-            String month = monthStart.getYear() + "-" + String.format("%02d", monthStart.getMonthValue());
-            revenueMap.put(month, BigDecimal.ZERO);
-        }
-
-        List<Object[]> results = repository.getRevenueForMonthRange(startDateTime, now.toLocalDateTime());
-
-        for (Object[] result : results) {
-            int year = (int) result[0];
-            int month = (int) result[1];
-            BigDecimal revenue = (BigDecimal) result[2];
-            String monthString = year + "-" + String.format("%02d", month);
-            revenueMap.put(monthString, revenue);
-        }
-
-        return revenueMap;
-    }
-    public Map<String, Map<String, Long>> getOrderCountByStatusForThisWeek() {
-        ZonedDateTime now = ZonedDateTime.now(VIETNAM_ZONE);
-        ZonedDateTime startOfWeek = now.with(WeekFields.of(Locale.getDefault()).dayOfWeek(), 1)
-                .withHour(0).withMinute(0).withSecond(0).withNano(0);
-        ZonedDateTime endOfWeek = startOfWeek.plusDays(6)
-                .withHour(23).withMinute(59).withSecond(59).withNano(999999999);
-
-        LocalDateTime startDateTime = startOfWeek.toLocalDateTime();
-        LocalDateTime endDateTime = endOfWeek.toLocalDateTime();
-
-        return getOrderCountByStatusGroupedByDate(startDateTime, endDateTime);
-    }
-
-    public Map<String, Map<String, Long>> getOrderCountByStatusForLast5Weeks() {
-        ZonedDateTime now = ZonedDateTime.now(VIETNAM_ZONE);
-        ZonedDateTime startDate = now.minusWeeks(4).with(DayOfWeek.MONDAY).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime startDateTime = startDate.toLocalDateTime();
-
-        ZonedDateTime endDate = now.with(DayOfWeek.SUNDAY).withHour(23).withMinute(59).withSecond(59).withNano(999999999);
-        LocalDateTime endDateTime = endDate.toLocalDateTime();
-
-        return getOrderCountByStatusGroupedByWeek(startDateTime, endDateTime);
-    }
-
-    public Map<String, Map<String, Long>> getOrderCountByStatusForLast3Months() {
-        ZonedDateTime now = ZonedDateTime.now(VIETNAM_ZONE);
-        ZonedDateTime startDate = now.minusMonths(2).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime startDateTime = startDate.toLocalDateTime();
-
-        ZonedDateTime endDate = now.withDayOfMonth(now.toLocalDate().lengthOfMonth()).withHour(23).withMinute(59).withSecond(59).withNano(999999999);
-        LocalDateTime endDateTime = endDate.toLocalDateTime();
-
-        return getOrderCountByStatusGroupedByMonth(startDateTime, endDateTime);
-    }
-
-    private Map<String, Map<String, Long>> getOrderCountByStatusGroupedByDate(LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        List<Object[]> results = repository.getOrderCountByStatusForDateRange(startDateTime, endDateTime);
-        Map<String, Map<String, Long>> groupedByDate = new LinkedHashMap<>();
-
-        // Initialize the map with 0 for each day in the range
-        LocalDate startDate = startDateTime.toLocalDate();
-        LocalDate endDate = endDateTime.toLocalDate();
-        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-            groupedByDate.put(date.toString(), initializeStatusCountsMap());
-        }
-
-        for (Object[] result : results) {
-            LocalDate date = ((java.sql.Date) result[0]).toLocalDate();
-            String status = (String) result[1];
-            Long count = ((Number) result[2]).longValue();
-            groupedByDate.get(date.toString()).put(status, count);
-        }
-
-        return groupedByDate;
-    }
-
-    private Map<String, Map<String, Long>> getOrderCountByStatusGroupedByWeek(LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        List<Object[]> results = repository.getOrderCountByStatusForDateRange(startDateTime, endDateTime);
-        Map<String, Map<String, Long>> groupedByWeek = new LinkedHashMap<>();
-
-        // Initialize the map with 0 for each week in the range
-        LocalDate startDate = startDateTime.toLocalDate();
-        LocalDate endDate = endDateTime.toLocalDate();
-        LocalDate firstDayOfWeek = startDate.with(WeekFields.ISO.dayOfWeek(), 1); // Monday of the first week
-        LocalDate lastDayOfWeek = endDate.with(WeekFields.ISO.dayOfWeek(), 7); // Sunday of the last week
-
-        // Create a list of all weeks in the range
-        while (!firstDayOfWeek.isAfter(lastDayOfWeek)) {
-            int weekOfYear = firstDayOfWeek.get(WeekFields.ISO.weekOfWeekBasedYear());
-            int year = firstDayOfWeek.getYear();
-            String weekLabel = "Week " + weekOfYear + "-" + year;
-            groupedByWeek.putIfAbsent(weekLabel, initializeStatusCountsMap());
-            firstDayOfWeek = firstDayOfWeek.plusWeeks(1);
-        }
-
-        // Process results
-        for (Object[] result : results) {
-            LocalDate date = ((java.sql.Date) result[0]).toLocalDate();
-            int weekOfYear = date.get(WeekFields.ISO.weekOfWeekBasedYear());
-            int year = date.getYear();
-            String weekLabel = "Week " + weekOfYear + "-" + year;
-            String status = (String) result[1];
-            Long count = ((Number) result[2]).longValue();
-
-            // Update count
-            groupedByWeek.computeIfAbsent(weekLabel, k -> initializeStatusCountsMap())
-                    .merge(status, count, Long::sum);
-        }
-
-        return groupedByWeek;
-    }
-
-    private Map<String, Map<String, Long>> getOrderCountByStatusGroupedByMonth(LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        List<Object[]> results = repository.getOrderCountByStatusForDateRange(startDateTime, endDateTime);
-        Map<String, Map<String, Long>> groupedByMonth = new LinkedHashMap<>();
-
-        // Initialize the map with 0 for each month in the range
-        YearMonth startMonth = YearMonth.from(startDateTime.toLocalDate());
-        YearMonth endMonth = YearMonth.from(endDateTime.toLocalDate());
-        for (YearMonth month = startMonth; !month.isAfter(endMonth); month = month.plusMonths(1)) {
-            groupedByMonth.put(month.toString(), initializeStatusCountsMap());
-        }
-
-        // Process results
-        for (Object[] result : results) {
-            LocalDate date = ((java.sql.Date) result[0]).toLocalDate();
-            YearMonth month = YearMonth.from(date);
-            String status = (String) result[1];
-            Long count = ((Number) result[2]).longValue();
-
-            // Update count
-            groupedByMonth.computeIfAbsent(month.toString(), k -> initializeStatusCountsMap())
-                    .merge(status, count, Long::sum);
-        }
-
-        return groupedByMonth;
-    }
-
-    private Map<String, Long> initializeStatusCountsMap() {
-        Map<String, Long> statusCounts = new LinkedHashMap<>();
-        statusCounts.put("Mới", 0L);
-        statusCounts.put("Đã xác nhận", 0L);
-        statusCounts.put("Hoàn thành", 0L);
-        statusCounts.put("Hủy", 0L);
-        return statusCounts;
+    public List<Order> getAllOrderPrev7Days(){
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        return repository.getAllOrderInPrev7Days(sevenDaysAgo);
     }
 }

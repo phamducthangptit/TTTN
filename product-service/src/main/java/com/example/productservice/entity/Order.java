@@ -20,10 +20,13 @@ public class Order {
     @Column(name = "order_id")
     private int orderId;
 
-    @Column(name = "total_amount_paid")
-    private BigDecimal totalAmount;
+    @Column(name = "total_cost_of_goods")
+    private BigDecimal totalCostOfGoods;
 
-    @Column(name = "order_date")
+    @Column(name = "shipping_fee")
+    private BigDecimal shippingFee;
+
+    @Column(name = "order_date", columnDefinition = "TIMESTAMP")
     private LocalDateTime orderDate;
 
     @Column(name = "status")
@@ -47,7 +50,4 @@ public class Order {
 
     @OneToMany(mappedBy = "order")
     private List<OrderDetail> orderDetails;
-
-    @OneToMany(mappedBy = "order")
-    private List<Review> reviews;
 }

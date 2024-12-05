@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DdlMappings">
+    <mapping uuid="80f3c790-e94b-489b-9697-292e3663654e" name="sell_electronics_online@localhost Mapping">
+      <data-sources db="b70d8768-77f6-4bad-8448-a882eb7ad4b7" />
+      <scope>
+        <node kind="schema" qname="sell_electronics_online" />
+      </scope>
+    </mapping>
+  </component>
+</project>

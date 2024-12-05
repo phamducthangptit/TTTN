@@ -50,8 +50,6 @@ public class AuthController {
         System.out.println("code dto: " + userAccountDTO.getCode());
         for (String key : mapCode.keySet()) {
             String value = mapCode.get(key);
-            System.out.println("mail: " + key);
-            System.out.println("values: " + value);
             if (key.compareTo(userAccountDTO.getEmail()) == 0 && value.compareTo(userAccountDTO.getCode()) == 0) {
                 check = 1;
                 break;
@@ -62,14 +60,12 @@ public class AuthController {
             user.setFirstName(userAccountDTO.getFirstName());
             user.setLastName(userAccountDTO.getLastName());
             user.setEmail(userAccountDTO.getEmail());
-            user.setAddress(userAccountDTO.getAddress());
-            user.setPhoneNumber(userAccountDTO.getPhoneNumber());
+            user.setGender(userAccountDTO.getGender());
+            user.setUserName(userAccountDTO.getUserName());
             user.setCreateAt(LocalDateTime.now());
-
             int result = accountService.createAccountAndUser(
                     user,
                     userAccountDTO.getRoleId(),
-                    userAccountDTO.getUserName(),
                     userAccountDTO.getPassword(),
                     userAccountDTO.getStatus()
             );

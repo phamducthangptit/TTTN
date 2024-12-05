@@ -29,7 +29,6 @@ public class OrderDetailService {
 
     @Transactional
     public void addNewOrderDetail(OrderRequestDTO orderRequestDTO, Order order){
-
         for(CartRequestOrderDTO cartRequestOrderDTO : orderRequestDTO.getListProducts()){
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setOrder(order);
@@ -49,6 +48,7 @@ public class OrderDetailService {
     private OrderDetailResponseDTO convertToDTO(OrderDetail orderDetail) {
         OrderDetailResponseDTO orderDetailResponseDTO = new OrderDetailResponseDTO();
         orderDetailResponseDTO.setProductId(orderDetail.getProduct().getProductId());
+        orderDetailResponseDTO.setOrderDetailId(orderDetail.getOrderDetailId());
         String image = orderDetail.getProduct().getImages().stream()
                 .filter(img -> img.isAvatar()) // Lọc các ảnh có avatar là true
                 .findFirst() // Lấy ảnh đầu tiên thỏa mãn điều kiện
@@ -61,11 +61,11 @@ public class OrderDetailService {
         int userId = orderDetail.getOrder().getUser().getUserId();
         int productId = orderDetail.getProduct().getProductId();
         int orderId = orderDetail.getOrder().getOrderId();
-
-        boolean hasReviewed = reviewService.hasUserReviewedProductInOrder(userId, productId, orderId);
-
+        System.out.println(productId);
+        boolean hasReview = reviewService.hasUserReviewed(orderDetail.getOrderDetailId());
+        System.out.println(hasReview);
         if(orderDetail.getOrder().getStatus().equals("Đã nhận hàng")) orderDetailResponseDTO.setCheckStatus(1); else  orderDetailResponseDTO.setCheckStatus(0);
-        if(orderDetail.getOrder().getStatus().equals("Hoàn thành")  && !hasReviewed) orderDetailResponseDTO.setCheckReview(1); else orderDetailResponseDTO.setCheckReview(0);
+        if(orderDetail.getOrder().getStatus().equals("Hoàn thành")  && !hasReview) orderDetailResponseDTO.setCheckReview(1); else orderDetailResponseDTO.setCheckReview(0);
         return orderDetailResponseDTO;
     }
 }

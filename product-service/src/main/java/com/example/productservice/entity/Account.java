@@ -12,27 +12,21 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "account")
+@Table(name = "account", schema = "sell_electronics_online")
 public class Account {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "account_id")
-    private int account_id;
+    @Column(name = "account_id", nullable = false)
+    private Integer id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
-
-    @Column(name = "user_name", nullable = false, unique = true)
+    @Column(name = "user_name", nullable = false, length = 45)
     private String userName;
 
     @Column(name = "password", nullable = false)
     private String password;
 
     @Column(name = "status", nullable = false)
-    private int status;
+    private Integer status;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
-    @Column(name = "create_at", nullable = false)
+    @Column(name = "create_at")
     private LocalDateTime createAt;
 }

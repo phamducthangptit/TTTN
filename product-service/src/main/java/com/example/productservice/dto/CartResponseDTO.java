@@ -16,14 +16,5 @@ public class CartResponseDTO {
     private String name;
     private String image;
     private int quantity;
-    private int price;
-    private String priceString;
-    private String formatPrice(BigDecimal price) {
-        return decimalFormat.format(price) + " VNĐ";
-    }
-
-    // Setter for price
-    public void setPriceString(BigDecimal price) {
-        this.priceString = formatPrice(price);
-    }
+    private BigDecimal price;
 }

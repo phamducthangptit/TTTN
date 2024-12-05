@@ -25,6 +25,8 @@ public class GuestController {
     private OrderDetailService orderDetailService;
     @Autowired
     private ReviewService reviewService;
+    @Autowired
+    private AddressService addressService;
 
     @GetMapping("/category/get-all-category")
     public ResponseEntity<?> getAllCategory() {
@@ -108,10 +110,11 @@ public class GuestController {
     }
 
     @PostMapping("/order/add-new-order")
-    public ResponseEntity<?> addNewOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                         @RequestHeader("X-Role") String role, @RequestBody OrderRequestDTO orderRequestDTO) {
+    public ResponseEntity<?> addNewOrder(@RequestHeader("X-Role") String role, @RequestBody OrderRequestDTO orderRequestDTO) {
         if (role.equals("GUEST")) {
             int result = orderService.addOrderGuest(orderRequestDTO);
+//            System.out.println(orderRequestDTO.toString());
+//            int result = 0;
             if (result != 0 && result != -1) // order thành công
                 return new ResponseEntity<>(new ResponseDTO("OrderOk", result + ""), HttpStatus.OK);
             if (result == -1)
@@ -165,4 +168,25 @@ public class GuestController {
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
+
+    @GetMapping("/address/get-all-address")
+    public ResponseEntity<?> getAllAddress(@RequestHeader("X-Role") String role, @RequestParam("username") String userName){
+        if(role.equals("GUEST")){
+            List<AddressResponseDTO> listResult = addressService.getAllAddressByUserName(userName);
+            if(listResult != null)
+                return new ResponseEntity<>(listResult, HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @DeleteMapping("/address/delete-address")
+    public ResponseEntity<?> deleteAddressById(@RequestHeader("X-Role") String role, @RequestParam("id") int id){
+        if(role.equals("GUEST")){
+            addressService.deleteAddress(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
 }

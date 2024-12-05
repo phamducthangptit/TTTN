@@ -30,6 +30,8 @@ public class ProductResponseDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
     private LocalDateTime updateAt;
 
+    private int isPresent;
+
     private String formatPrice(BigDecimal price) {
         return decimalFormat.format(price) + " VNĐ";
     }

@@ -11,9 +11,12 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CartService {
@@ -25,7 +28,8 @@ public class CartService {
 
     @Autowired
     private ProductService productService;
-
+    @Autowired
+    private CartRepository cartRepository;
 
 
     public int countProductInCart(String userName) {
@@ -63,6 +67,7 @@ public class CartService {
 
     public List<CartResponseDTO> getAllProductInCart(String userName){
         int userId = accountService.getUserId(userName);
+        LocalDateTime currentDate = LocalDateTime.now();
         List<CartResponseDTO> listCartResponseDTO = new ArrayList<>();
         List<Cart> listProductInCart = repository.getAllProductInCartByUserId(userId);
         for(Cart cart : listProductInCart){
@@ -76,8 +81,12 @@ public class CartService {
                     .orElse(null);
             cartResponseDTO.setImage(image);
             cartResponseDTO.setQuantity(cart.getQuantity());
-            cartResponseDTO.setPrice(cart.getProduct().getPrice().intValue());
-            cartResponseDTO.setPriceString(cart.getProduct().getPrice());
+            Optional<BigDecimal> priceNow = cart.getProduct().getPriceDetails().stream()
+                    .filter(pd -> pd.getStartAt().isBefore(currentDate) || pd.getStartAt().isEqual(currentDate))
+                    .filter(pd -> pd.getEndAt() == null || pd.getEndAt().isAfter(currentDate) || pd.getEndAt().isEqual(currentDate))
+                    .map(PriceDetail::getPrice1) // Lấy giá trị price1 từ PriceDetail
+                    .findFirst(); // Lấy giá đầu tiên thỏa mãn điều kiện (nếu có)
+            priceNow.ifPresent(cartResponseDTO::setPrice);
             listCartResponseDTO.add(cartResponseDTO);
         }
         return listCartResponseDTO;

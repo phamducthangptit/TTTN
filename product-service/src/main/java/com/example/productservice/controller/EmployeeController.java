@@ -37,6 +37,8 @@ public class EmployeeController {
 
     @Autowired
     private OrderService orderService;
+    @Autowired
+    private PriceService priceService;
 
     @GetMapping("/manufacturer/get-all-manufacturer")
     public ResponseEntity<?> getAllManufacturer(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
@@ -184,8 +186,21 @@ public class EmployeeController {
     @PostMapping("/product/add-new-product")
     public ResponseEntity<?> addNewProduct(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
                                            @RequestHeader("X-Role") String role, @RequestBody ProductRequestDTO productRequestDTO){
-        if(role.equals("EMPLOYEE"))
+        if(role.equals("EMPLOYEE")){
+            System.out.println(productRequestDTO.toString());
             return new ResponseEntity<>(productService.saveProduct(productRequestDTO), HttpStatus.OK);
+
+//            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @PostMapping("/product/update-is-present")
+    public ResponseEntity<?> updateIsPresent(@RequestHeader("X-Role") String role, @RequestBody ProductUpdateIsPresentRequest productUpdateIsPresentRequest){
+        if(role.equals("EMPLOYEE")){
+            productService.updateIsPresent(productUpdateIsPresentRequest.getProductId(), productUpdateIsPresentRequest.getIsPresent());
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
@@ -238,6 +253,40 @@ public class EmployeeController {
         if(role.equals("EMPLOYEE")){
             orderService.employeeUpdateStatusOrder(orderIdDTO);
             return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @GetMapping("/price/get-all-price-name")
+    public ResponseEntity<?> getAllPriceName(@RequestHeader("X-Role") String role){
+        if(role.equals("EMPLOYEE")){
+            List<PriceDTO> listPrice = priceService.getAllPrice();
+            if(listPrice != null){
+                return new ResponseEntity<>(listPrice, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @PostMapping("/price/add-new-price")
+    public ResponseEntity<?> addNewPrice(@RequestHeader("X-Role") String role, @RequestBody PriceRequestDTO priceRequestDTO){
+        if(role.equals("EMPLOYEE")){
+            PriceDTO priceDTO = priceService.savePrice(priceRequestDTO.getPriceName());
+            if(priceDTO != null){
+                return new ResponseEntity<>(priceDTO, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @PostMapping("/price/update-price-product")
+    public ResponseEntity<?> updatePriceProduct(@RequestHeader("X-Role") String role, @RequestBody PriceUpdateRequest priceUpdateRequest){
+        if(role.equals("EMPLOYEE")){
+            System.out.println(priceUpdateRequest.toString());
+            priceService.updatePriceProduct(priceUpdateRequest);
+            return new ResponseEntity<>((new ResponseDTO("Ok", "Test ok")), HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -17,7 +18,7 @@ public class ProductDetailResponseGuestDTO {
     private String description;
     private String manufacturerName;
     private String categoryName;
-    private String price;
+    private BigDecimal price;
     private Integer stock;
     private List<DetailProductResponseDTO> listDetail;
     private List<String> image;

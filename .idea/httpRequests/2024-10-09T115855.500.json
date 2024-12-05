@@ -1,0 +1,7 @@
+{
+  "timestamp": "2024-10-09T04:58:55.250+00:00",
+  "path": "/api/import-goods-service/employee/detail-goods-receipt",
+  "status": 500,
+  "error": "Internal Server Error",
+  "requestId": "3ea7c3aa-5"
+}

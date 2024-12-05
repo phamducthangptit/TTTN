@@ -1,12 +1,9 @@
 package com.example.informationservice.controller;
 
-import com.example.informationservice.dto.EmployeeDTO;
 import com.example.informationservice.dto.GuestDTO;
-import com.example.informationservice.dto.UpdateStatusRequest;
 import com.example.informationservice.service.AccountService;
 import com.example.informationservice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +20,7 @@ public class EmployeeController {
     private AccountService accountService;
 
     @GetMapping("/list-guest")
-    public ResponseEntity<?> listEmployee(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                          @RequestHeader("X-Role") String role) {
+    public ResponseEntity<?> listEmployee(@RequestHeader("X-Role") String role) {
         if (role.equals("EMPLOYEE")) {
             List<GuestDTO> list = userService.getAllGuest();
             if (list.isEmpty()) {

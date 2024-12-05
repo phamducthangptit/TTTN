@@ -20,12 +20,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-    public class ProductService {
-        @Autowired
-        private ProductRepository repository;
+public class ProductService {
+    @Autowired
+    private ProductRepository repository;
 
-        @Autowired
-        private CategoryService categoryService;
+    @Autowired
+    private CategoryService categoryService;
 
     @Autowired
     private ManufacturerService manufacturerService;
@@ -39,14 +39,24 @@ import java.util.stream.Collectors;
     @Autowired
     private OrderDetailService orderDetailService;
 
+    @Autowired
+    private ReviewService reviewService;
+
+    @Autowired
+    private PriceService priceService;
+
+    @Autowired
+    private PriceDetailService priceDetailService;
+
     public List<ProductResponseDTO> getAllProductByCategoryId(int categoryId) {
         return repository.getAllProductByCategoryId(categoryId).stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
-    public List<ProductResponseDTO> getAllProduct(){
-        return repository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+    public List<ProductResponseDTO> getAllProduct() {
+        return repository.getAllProductByIsPresent().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
-    public List<ProductResponseDTO> getAllProductByQuery(String query){
+
+    public List<ProductResponseDTO> getAllProductByQuery(String query) {
         return repository.getProductByQuery(query).stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
@@ -59,7 +69,7 @@ import java.util.stream.Collectors;
         return null;
     }
 
-    public ProductDetailResponseGuestDTO getProductGuest(int productId){
+    public ProductDetailResponseGuestDTO getProductGuest(int productId) {
         Optional<Product> object = repository.findByproductId(productId);
         if (object.isPresent()) {
             Product product = object.get();
@@ -69,6 +79,7 @@ import java.util.stream.Collectors;
     }
 
     private ProductDetailResponseGuestDTO convertProductToGuestDTO(Product product) {
+        LocalDateTime currentDate = LocalDateTime.now();
         DecimalFormat decimalFormat = new DecimalFormat("#.##");
         ProductDetailResponseGuestDTO productDetailResponseGuestDTO = new ProductDetailResponseGuestDTO();
         productDetailResponseGuestDTO.setProductId(product.getProductId());
@@ -76,19 +87,25 @@ import java.util.stream.Collectors;
         productDetailResponseGuestDTO.setDescription(product.getDescription());
         productDetailResponseGuestDTO.setManufacturerName(product.getManufacturer().getName());
         productDetailResponseGuestDTO.setCategoryName(product.getCategory().getName());
-        productDetailResponseGuestDTO.setPrice(decimalFormat.format(product.getPrice()));
         productDetailResponseGuestDTO.setStock(product.getStock());
         productDetailResponseGuestDTO.setListDetail(product.getProductDetails().stream().map(this::convertDetailToDTO).collect(Collectors.toList()));
         productDetailResponseGuestDTO.setImage(product.getImages().stream().map(this::convertImageToDTO).collect(Collectors.toList()));
-        productDetailResponseGuestDTO.setListReview(product.getReviews().stream().map(this::convertReviewToGuestDTO).collect(Collectors.toList()));
+        productDetailResponseGuestDTO.setListReview(reviewService.getListReviewByProductId(product.getProductId()));
         productDetailResponseGuestDTO.setCountSales(countSales(product.getOrderDetails(), product.getProductId()));
+        // Lọc danh sách PriceDetail để lấy giá hiện tại
+        Optional<BigDecimal> priceNow = product.getPriceDetails().stream()
+                .filter(pd -> pd.getStartAt().isBefore(currentDate) || pd.getStartAt().isEqual(currentDate))
+                .filter(pd -> pd.getEndAt() == null || pd.getEndAt().isAfter(currentDate) || pd.getEndAt().isEqual(currentDate))
+                .map(PriceDetail::getPrice1) // Lấy giá trị price1 từ PriceDetail
+                .findFirst(); // Lấy giá đầu tiên thỏa mãn điều kiện (nếu có)
+        priceNow.ifPresent(productDetailResponseGuestDTO::setPrice);
         return productDetailResponseGuestDTO;
     }
 
-    private int countSales(List<OrderDetail> listOrderDetail, int productId){
+    private int countSales(List<OrderDetail> listOrderDetail, int productId) {
         int count = 0;
-        for(OrderDetail orderDetail : listOrderDetail){
-            if(orderDetail.getProduct().getProductId() == productId) count += orderDetail.getQuantity();
+        for (OrderDetail orderDetail : listOrderDetail) {
+            if (orderDetail.getProduct().getProductId() == productId) count += orderDetail.getQuantity();
         }
         return count;
     }
@@ -104,6 +121,7 @@ import java.util.stream.Collectors;
     }
 
     private ProductDetailResponseDTO convertProductToDTO(Product product) {
+        LocalDateTime currentDate = LocalDateTime.now();
         DecimalFormat decimalFormat = new DecimalFormat("#.##");
         ProductDetailResponseDTO productResponseDTO = new ProductDetailResponseDTO();
         productResponseDTO.setProductId(product.getProductId());
@@ -111,13 +129,48 @@ import java.util.stream.Collectors;
         productResponseDTO.setDescription(product.getDescription());
         productResponseDTO.setManufacturerId(product.getManufacturer().getManufacturerId());
         productResponseDTO.setCategoryId(product.getCategory().getCategoryId());
-        productResponseDTO.setPrice(decimalFormat.format(product.getPrice()));
         productResponseDTO.setStock(product.getStock());
         productResponseDTO.setCreateAt(product.getCreateAt());
         productResponseDTO.setUpdateAt(product.getUpdateAt());
         productResponseDTO.setImage(product.getImages().stream().map(this::convertImageToDTO).collect(Collectors.toList()));
         productResponseDTO.setListDetail(product.getProductDetails().stream().map(this::convertDetailToDTO).collect(Collectors.toList()));
+        productResponseDTO.setLength(product.getLength());
+        productResponseDTO.setWeight(product.getWeight());
+        productResponseDTO.setHeight(product.getHeight());
+        productResponseDTO.setWidth(product.getWidth());
+
+        // Lọc danh sách PriceDetail để lấy giá hiện tại
+        Optional<PriceResponseDTO> priceNow = product.getPriceDetails().stream()
+                .filter(pd -> pd.getStartAt().isBefore(currentDate) || pd.getStartAt().isEqual(currentDate))
+                .filter(pd -> pd.getEndAt() == null || pd.getEndAt().isAfter(currentDate) || pd.getEndAt().isEqual(currentDate))
+                .map(pd -> new PriceResponseDTO(
+                        pd.getPrice().getId(),
+                        pd.getPrice().getName(),
+                        pd.getPrice1(),
+                        pd.getStartAt(),
+                        pd.getEndAt()
+                )) // Lấy giá trị price1 từ PriceDetail
+                .findFirst(); // Lấy giá đầu tiên thỏa mãn điều kiện (nếu có)
+        if (priceNow.isPresent()) {
+            PriceResponseDTO priceResponseDTO = priceNow.get();
+            productResponseDTO.setPriceId(priceResponseDTO.getPriceId());
+            productResponseDTO.setPriceNameNow(priceResponseDTO.getPriceName());
+            productResponseDTO.setPriceNow(priceResponseDTO.getPrice());
+            productResponseDTO.setPriceStartAtNow(priceResponseDTO.getStartAt());
+            productResponseDTO.setPriceEndAtNow(priceResponseDTO.getEndAt());
+        }
+        productResponseDTO.setListPrice(product.getPriceDetails().stream().map(this::convertPriceToDTO).collect(Collectors.toList()));
         return productResponseDTO;
+    }
+
+    private PriceResponseDTO convertPriceToDTO(PriceDetail priceDetail) {
+        PriceResponseDTO priceResponseDTO = new PriceResponseDTO();
+        priceResponseDTO.setPriceId(priceDetail.getPrice().getId());
+        priceResponseDTO.setPriceName(priceDetail.getPrice().getName());
+        priceResponseDTO.setPrice(priceDetail.getPrice1());
+        priceResponseDTO.setStartAt(priceDetail.getStartAt());
+        priceResponseDTO.setEndAt(priceDetail.getEndAt());
+        return priceResponseDTO;
     }
 
     private DetailProductResponseDTO convertDetailToDTO(ProductDetail productDetail) {
@@ -133,16 +186,16 @@ import java.util.stream.Collectors;
     }
 
     private ProductResponseDTO convertToDTO(Product product) {
+        LocalDateTime currentDate = LocalDateTime.now();
         ProductResponseDTO productResponseDTO = new ProductResponseDTO();
         productResponseDTO.setProductId(product.getProductId());
         productResponseDTO.setName(product.getName());
         productResponseDTO.setDescription(product.getDescription());
         productResponseDTO.setManufacturerName(product.getManufacturer().getName());
         productResponseDTO.setCategoryName(product.getCategory().getName());
-        productResponseDTO.setPrice(product.getPrice());
         productResponseDTO.setStock(product.getStock());
-        productResponseDTO.setPriceSale(product.getPrice());
         productResponseDTO.setCountSales(countSales(product.getOrderDetails(), product.getProductId()));
+        productResponseDTO.setIsPresent(product.getIsPresent());
         String image = product.getImages().stream()
                 .filter(img -> img.isAvatar()) // Lọc các ảnh có avatar là true
                 .findFirst() // Lấy ảnh đầu tiên thỏa mãn điều kiện
@@ -151,14 +204,24 @@ import java.util.stream.Collectors;
         List<String> avatarProduct = new ArrayList<>();
         avatarProduct.add(image);
         productResponseDTO.setImage(avatarProduct);
+        // Lọc danh sách PriceDetail để lấy giá hiện tại
+        Optional<BigDecimal> priceNow = product.getPriceDetails().stream()
+                .filter(pd -> pd.getStartAt().isBefore(currentDate) || pd.getStartAt().isEqual(currentDate))
+                .filter(pd -> pd.getEndAt() == null || pd.getEndAt().isAfter(currentDate) || pd.getEndAt().isEqual(currentDate))
+                .map(PriceDetail::getPrice1) // Lấy giá trị price1 từ PriceDetail
+                .findFirst(); // Lấy giá đầu tiên thỏa mãn điều kiện (nếu có)
+
+        priceNow.ifPresent(productResponseDTO::setPrice);
+        priceNow.ifPresent(productResponseDTO::setPriceSale);
+
         return productResponseDTO;
     }
 
+    @Transactional
     public ProductResponseDTO saveProduct(ProductRequestDTO productRequestDTO) {
         Product product = new Product();
         product.setName(productRequestDTO.getName());
-        product.setPrice(BigDecimal.valueOf(Integer.parseInt(productRequestDTO.getPrice())));
-        product.setStock(Integer.parseInt(productRequestDTO.getStock()));
+        product.setStock(0);
         Category category = categoryService.getCategoryById(productRequestDTO.getCategoryId());
         product.setCategory(category);
         Manufacturer manufacturer = manufacturerService.getManufacturerById(productRequestDTO.getManufacturerId());
@@ -166,6 +229,11 @@ import java.util.stream.Collectors;
         product.setCreateAt(LocalDateTime.now());
         product.setUpdateAt(LocalDateTime.now());
         product.setDescription(productRequestDTO.getDescription());
+        product.setWeight(productRequestDTO.getWeight());
+        product.setHeight(productRequestDTO.getHeight());
+        product.setWidth(productRequestDTO.getWidth());
+        product.setLength(productRequestDTO.getLength());
+        product.setIsPresent(productRequestDTO.getIsPresent());
         Product savedProduct = repository.save(product);
 
         // insert product detail
@@ -191,12 +259,27 @@ import java.util.stream.Collectors;
             if (++check == 1) image.setAvatar(true);
             imageService.addNewImage(image);
         }
+        // insert price
+        int priceId = priceService.getPriceIdByPriceName(productRequestDTO.getNamePrice());
+        // insert price detail
+        PriceDetailDTO priceDetailDTO = new PriceDetailDTO();
+        priceDetailDTO.setProductId(savedProduct.getProductId());
+        priceDetailDTO.setPriceId(priceId);
+        priceDetailDTO.setPrice(BigDecimal.valueOf(Integer.parseInt(productRequestDTO.getPrice())));
+        priceDetailDTO.setStartAt(productRequestDTO.getStartDatePrice());
+        priceDetailDTO.setEndAt(productRequestDTO.getEndDatePrice());
+        priceDetailService.savePriceDetail(priceDetailDTO);
         ProductResponseDTO productResponseDTO = new ProductResponseDTO();
         productResponseDTO.setProductId(savedProduct.getProductId());
+
         return productResponseDTO;
     }
 
-    public void updateStockProduct(int quantity, int productId){
+    public void updateIsPresent(int productId, int isPresent) {
+        repository.updateIsPresent(isPresent, productId);
+    }
+
+    public void updateStockProduct(int quantity, int productId) {
         repository.updateStockProduct(quantity, productId);
     }
 
@@ -208,8 +291,8 @@ import java.util.stream.Collectors;
         System.out.println(productDetailResponseDTO.getListDetail().toString());
         System.out.println(productRequestUpdateDTO.getProductDetails().toString());
         // update các thuôộc tính khác
-        repository.updateProduct(productRequestUpdateDTO.getName(), BigDecimal.valueOf(Integer.parseInt(productRequestUpdateDTO.getPrice())),
-                Integer.parseInt(productRequestUpdateDTO.getStock()), productRequestUpdateDTO.getDescription(), productRequestUpdateDTO.getCategoryId(),
+        repository.updateProduct(productRequestUpdateDTO.getName(),
+                productRequestUpdateDTO.getDescription(), productRequestUpdateDTO.getCategoryId(),
                 productRequestUpdateDTO.getManufacturerId(), productRequestUpdateDTO.getProductId());
         // nếu khác category thì cập nhật lại casc thuộc tính, xóa các thuộc tính cũ, thêm thuộc tính mới
         if (productRequestUpdateDTO.getCategoryId() != productDetailResponseDTO.getCategoryId()) {
@@ -247,8 +330,8 @@ import java.util.stream.Collectors;
                         productDetailRequestDTO.getValue());
             }
             // nếu có thuoc tinh moi thi them
-            for(ProductDetailRequestDTO productDetailRequestDTO : productRequestUpdateDTO.getProductDetails()){
-                if(!productDetailResponseDTO.getListDetail().contains(productDetailRequestDTO)){
+            for (ProductDetailRequestDTO productDetailRequestDTO : productRequestUpdateDTO.getProductDetails()) {
+                if (!productDetailResponseDTO.getListDetail().contains(productDetailRequestDTO)) {
 
                     ProductDetail productDetail = new ProductDetail();
                     ProductDetailId productDetailId = new ProductDetailId();
@@ -271,21 +354,21 @@ import java.util.stream.Collectors;
         //
         List<String> imageBE = productDetailResponseDTO.getImage();
         List<String> imageFE = productRequestUpdateDTO.getImages();
-        for(String s : imageFE){ // có trên fe mà không có dưới be thì thêm
-            if(!imageBE.contains(s)){
+        for (String s : imageFE) { // có trên fe mà không có dưới be thì thêm
+            if (!imageBE.contains(s)) {
                 Image image = new Image();
                 Product product = repository.findByproductId(productDetailResponseDTO.getProductId()).get();
                 image.setProduct(product);
                 image.setUrl(s);
-                if(imageService.countImageProduct(productDetailResponseDTO.getProductId()) == 0){
+                if (imageService.countImageProduct(productDetailResponseDTO.getProductId()) == 0) {
                     image.setAvatar(true);
                 } else image.setAvatar(false);
                 imageService.addNewImage(image);
             }
 
         }
-        for(String s : imageBE){ // có dưới be mà không có trên fe thì xóa
-            if(!imageFE.contains(s)){
+        for (String s : imageBE) { // có dưới be mà không có trên fe thì xóa
+            if (!imageFE.contains(s)) {
                 imageService.deleteImageByProductIdAndUrl(productDetailResponseDTO.getProductId(), s);
             }
         }
@@ -299,7 +382,6 @@ import java.util.stream.Collectors;
         productDetailResponseDTO.setDescription(product.getDescription());
         productDetailResponseDTO.setManufacturerId(product.getManufacturer().getManufacturerId());
         productDetailResponseDTO.setCategoryId(product.getCategory().getCategoryId());
-        productDetailResponseDTO.setPrice(product.getPrice().toPlainString());
         productDetailResponseDTO.setStock(product.getStock());
         productDetailResponseDTO.setImage(product.getImages().stream().map(this::convertImageToDTO).collect(Collectors.toList()));
         productDetailResponseDTO.setListDetail(product.getProductDetails().stream().map(this::convertDetailToDTO).collect(Collectors.toList()));
@@ -316,6 +398,8 @@ import java.util.stream.Collectors;
                 productDetailService.deleteProductDetailByProductId(productId);
                 // xóa image
                 imageService.deleteImageByProductId(productId);
+                // xóa price detail
+                priceDetailService.deletePriceDetail(productId);
                 // xóa product
                 repository.deleteProductById(productId);
                 return 1; // xóa thành công
@@ -325,7 +409,8 @@ import java.util.stream.Collectors;
         return -1; // không tìm thấy product
     }
 
-    public int getStockProduct(int productId){
+    public int getStockProduct(int productId) {
         return repository.getStockProduct(productId);
     }
+
 }

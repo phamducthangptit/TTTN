@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,6 +20,10 @@ public class User {
     @Column(name = "user_id")
     private Integer userId;
 
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_name", nullable = false, referencedColumnName = "user_name")
+    private Account account;
+
     @Column(name = "first_name", nullable = false)
     private String firstName;
 
@@ -28,11 +33,11 @@ public class User {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "address")
-    private String address;
+    @Column(name = "gender", nullable = false)
+    private Boolean gender = false;
 
-    @Column(name = "phone_number")
-    private String phoneNumber;
+    @Column(name = "birthday")
+    private LocalDate birthday;
 
     @Column(name = "create_at", nullable = false)
     private LocalDateTime createAt;
@@ -46,15 +51,6 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Order> orders;
 
-    @Override
-    public String toString() {
-        return "User{" +
-                "userId=" + userId +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", email='" + email + '\'' +
-                ", address='" + address + '\'' +
-                ", phoneNumber='" + phoneNumber + '\'' +
-                '}';
-    }
+    @OneToMany(mappedBy = "user")
+    private List<Address> addresses;
 }

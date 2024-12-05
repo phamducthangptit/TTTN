@@ -32,7 +32,7 @@ public class AuthConfig {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth-service/register", "/api/auth-service/login",
-                                "/api/auth-service/validate", "/api/auth-service/send-code",
+                                "/api/auth-service/validate", "/api/auth-service/send-code","/api/information-service/user/send-code",
                                 "/api/information-service/user/reset-password",
                                 "/api/product-service/guest/category/get-all-category",
                                 "/api/product-service/guest/product/get-all-product",

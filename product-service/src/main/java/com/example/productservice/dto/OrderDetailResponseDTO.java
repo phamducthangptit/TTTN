@@ -13,6 +13,7 @@ import java.text.DecimalFormat;
 public class OrderDetailResponseDTO {
     private static final DecimalFormat decimalFormat = new DecimalFormat("###,###,###,###");
     private int productId;
+    private int orderDetailId;
     private String image;
     private int stock;
     private int checkStatus;

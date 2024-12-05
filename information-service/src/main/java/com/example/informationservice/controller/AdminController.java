@@ -1,11 +1,10 @@
 package com.example.informationservice.controller;
 
 import com.example.informationservice.dto.*;
-import com.example.informationservice.entity.User;
+import com.example.informationservice.entity.Staff;
 import com.example.informationservice.service.AccountService;
-import com.example.informationservice.service.UserService;
+import com.example.informationservice.service.StaffService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,17 +15,17 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/information-service/admin")
 public class AdminController {
-    @Autowired
-    private UserService userService;
 
     @Autowired
     private AccountService accountService;
 
+    @Autowired
+    private StaffService staffService;
+
     @GetMapping("/list-employee")
-    public ResponseEntity<?> listEmployee(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                          @RequestHeader("X-Role") String role) {
+    public ResponseEntity<?> listEmployee(@RequestHeader("X-Role") String role) {
         if (role.equals("ADMIN")) {
-            List<EmployeeDTO> list = userService.getAllUsers();
+            List<StaffDTO> list = staffService.getAllStaff();
             if (list.isEmpty()) {
                 return new ResponseEntity(HttpStatus.NO_CONTENT);
             }
@@ -36,8 +35,7 @@ public class AdminController {
     }
 
     @PostMapping("/update-status-account")
-    public ResponseEntity<?> updateStatusAccount(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                                 @RequestHeader("X-Role") String role, @RequestBody UpdateStatusRequest updateStatusRequest) {
+    public ResponseEntity<?> updateStatusAccount(@RequestHeader("X-Role") String role, @RequestBody UpdateStatusRequest updateStatusRequest) {
         if (role.equals("ADMIN") || role.equals("EMPLOYEE")) {
             accountService.updateStatusAccount(updateStatusRequest);
             return new ResponseEntity<>(HttpStatus.OK);
@@ -45,35 +43,23 @@ public class AdminController {
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
-    @PostMapping("/update-information-employee")
-    public ResponseEntity<?> updateInformationEmployee(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                                       @RequestHeader("X-Role") String role, @RequestBody UpdateEmployeeRequest updateEmployeeRequest) {
-        if (role.equals("ADMIN")) {
-            int result = userService.updateEmployee(updateEmployeeRequest);
-            if (result == -1) {
-                return new ResponseEntity<>(new ResponseDTO("ErrorEmail", "Đã tồn tại email này!"), HttpStatus.BAD_REQUEST);
-            } else
-                return new ResponseEntity<>(HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-    }
-
     @PostMapping("/add-employee")
-    public ResponseEntity<?> addEmployee(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                         @RequestHeader("X-Role") String role, @RequestBody EmployeeAccountDTO employeeAccountDTO) {
+    public ResponseEntity<?> addEmployee(@RequestHeader("X-Role") String role, @RequestBody EmployeeAccountDTO employeeAccountDTO) {
         if(role.equals("ADMIN")){
-            User user = new User();
-            user.setFirstName(employeeAccountDTO.getFirstName());
-            user.setLastName(employeeAccountDTO.getLastName());
-            user.setEmail(employeeAccountDTO.getEmail());
-            user.setAddress(employeeAccountDTO.getAddress());
-            user.setPhoneNumber(employeeAccountDTO.getPhoneNumber());
-            user.setCreateAt(LocalDateTime.now());
+            Staff staff = new Staff();
+            staff.setFirstName(employeeAccountDTO.getFirstName());
+            staff.setLastName(employeeAccountDTO.getLastName());
+            staff.setEmail(employeeAccountDTO.getEmail());
+            staff.setPhoneNumber(employeeAccountDTO.getPhoneNumber());
+            staff.setGender(employeeAccountDTO.getGender());
+            staff.setAddress(employeeAccountDTO.getAddress());
+            staff.setBirthday(employeeAccountDTO.getBirthday());
+            staff.setCreateAt(LocalDateTime.now());
+            staff.setUserName(employeeAccountDTO.getUserName());
 
-            int result = accountService.createAccountAndUser(
-                    user,
+            int result = accountService.createAccountAndStaff(
+                    staff,
                     employeeAccountDTO.getRoleId(),
-                    employeeAccountDTO.getUserName(),
                     employeeAccountDTO.getPassword(),
                     employeeAccountDTO.getStatus()
             );
@@ -87,6 +73,23 @@ public class AdminController {
             }
             ResponseDTO responseDTO = new ResponseDTO("CreateAccountOk", "Tạo tài khoản thành công");
             return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+    // get information employee, admin
+    @GetMapping("/get-information")
+    public ResponseEntity<?> getInformation(@RequestHeader("X-Role") String role, @RequestParam("user-name") String userName) {
+        if (role.equals("ADMIN") || role.equals("EMPLOYEE")) {
+            return new ResponseEntity<>(staffService.getInformationStaff(userName), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+    // update information employee, admin
+    @PostMapping("/update-information")
+    public ResponseEntity<?> updateInformation(@RequestHeader("X-Role") String role, @RequestBody StaffDTO staffDTO) {
+        if (role.equals("ADMIN") || role.equals("EMPLOYEE")) {
+            staffService.updateInformation(staffDTO);
+            return new ResponseEntity<>(HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }

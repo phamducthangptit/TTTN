@@ -1,16 +1,20 @@
 package com.example.productservice.controller;
 
+import com.example.productservice.dto.RevenueRequestDTO;
 import com.example.productservice.service.OrderService;
+import com.example.productservice.service.PredictService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -18,51 +22,37 @@ import java.util.Map;
 public class AdminController {
     @Autowired
     private OrderService orderService;
-    @GetMapping("/revenue-this-week")
-    public ResponseEntity<?> getRevenueLast7Days(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                                       @RequestHeader("X-Role") String role) {
-        if(role.equals("ADMIN"))
-            return new ResponseEntity<>(orderService.getRevenueForThisWeek(), HttpStatus.OK);
+
+    @Autowired
+    private PredictService predictService;
+
+
+    @PostMapping("revenue")
+    public ResponseEntity<?> revenue(@RequestHeader("X-Role") String role, @RequestBody RevenueRequestDTO revenueRequestDTO) {
+        if (role.equals("ADMIN") || role.equals("EMPLOYEE")) {
+            System.out.println(revenueRequestDTO.getStartDate());
+            System.out.println(revenueRequestDTO.getEndDate());
+            return new ResponseEntity<>(orderService.getRevenue(revenueRequestDTO), HttpStatus.OK);
+        }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
-    @GetMapping("/revenue-last-5-weeks")
-    public ResponseEntity<?> getRevenueLast5Weeks(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                                        @RequestHeader("X-Role") String role) {
-        if(role.equals("ADMIN"))
-            return new ResponseEntity<>(orderService.getRevenueForLast5Weeks(), HttpStatus.OK);
+    @PostMapping("order-statistics")
+    public ResponseEntity<?> orderStatistics(@RequestHeader("X-Role") String role, @RequestBody RevenueRequestDTO revenueRequestDTO){
+        if (role.equals("ADMIN") || role.equals("EMPLOYEE")) {
+            return new ResponseEntity<>(orderService.getOrderStatistic(revenueRequestDTO), HttpStatus.OK);
+        }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
-    @GetMapping("/revenue-last-3-months")
-    public ResponseEntity<?> getRevenueLast3Months(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                                         @RequestHeader("X-Role") String role) {
-        if(role.equals("ADMIN"))
-            return new ResponseEntity<>(orderService.getRevenueForLast3Months(), HttpStatus.OK);
+    @PostMapping("predict-trend")
+    public ResponseEntity<?> predictTrend(@RequestHeader("X-Role") String role) throws JsonProcessingException {
+        if (role.equals("ADMIN") || role.equals("EMPLOYEE")) {
+
+            return new ResponseEntity<>(predictService.predict(), HttpStatus.OK);
+        }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
-    @GetMapping("/status-counts/this-week")
-    public ResponseEntity<?> getOrderCountByStatusForThisWeek(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                                              @RequestHeader("X-Role") String role) {
-        if(role.equals("ADMIN"))
-            return new ResponseEntity<>(orderService.getOrderCountByStatusForThisWeek(), HttpStatus.OK);
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-    }
 
-    @GetMapping("/status-counts/last-five-weeks")
-    public ResponseEntity<?> getOrderCountByStatusForLast5Weeks(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                                                @RequestHeader("X-Role") String role) {
-        if(role.equals("ADMIN"))
-            return new ResponseEntity<>(orderService.getOrderCountByStatusForLast5Weeks(), HttpStatus.OK);
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-    }
-
-    @GetMapping("/status-counts/last-three-months")
-    public ResponseEntity<?> getOrderCountByStatusForLast3Months(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                                                 @RequestHeader("X-Role") String role) {
-        if(role.equals("ADMIN"))
-            return new ResponseEntity<>(orderService.getOrderCountByStatusForLast3Months(), HttpStatus.OK);
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-    }
 }

@@ -5,9 +5,11 @@ import com.example.informationservice.dto.ResetPasswordRequest;
 import com.example.informationservice.dto.UpdateStatusRequest;
 import com.example.informationservice.entity.Account;
 import com.example.informationservice.entity.Role;
+import com.example.informationservice.entity.Staff;
 import com.example.informationservice.entity.User;
 import com.example.informationservice.repository.AccountRepository;
 import com.example.informationservice.repository.RoleRepository;
+import com.example.informationservice.repository.StaffRepository;
 import com.example.informationservice.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,9 @@ public class AccountService {
     private UserRepository userRepository;
 
     @Autowired
+    private StaffRepository staffRepository;
+
+    @Autowired
     private RoleRepository roleRepository;
 
     @Autowired
@@ -36,27 +41,30 @@ public class AccountService {
     }
 
     @Transactional
-    public int createAccountAndUser(User user, int roleId, String userName, String password, int status) {
+    public int createAccountAndStaff(Staff staff, int roleId, String password, int status) {
         Role role = roleRepository.findById(roleId).orElseThrow(() -> new IllegalArgumentException("Role not found"));
-        Optional<User> searchUserByEmail = userRepository.findByEmail(user.getEmail());
-        Optional<Account> searchAccountByUserName = accountRepository.findByuserName(userName);
+        Optional<Staff> searchUserByEmail = staffRepository.findByEmail(staff.getEmail());
+        Optional<Account> searchAccountByUserName = accountRepository.findByuserName(staff.getUserName());
         if(searchUserByEmail.isPresent()){
             return -1;
         }
         if(searchAccountByUserName.isPresent()){
             return -2;
         }
-        user = userRepository.save(user);
+
 
         Account account = new Account();
-        account.setUser(user);
+
         account.setRole(role);
-        account.setUserName(userName);
+        account.setUserName(staff.getUserName());
         account.setPassword(passwordEncoder.encode(password));
         account.setStatus(status);
         account.setCreateAt(LocalDateTime.now());
 
         accountRepository.save(account);
+        staff = staffRepository.save(staff);
+        account.setStaff(staff);
+
         return 1;
     }
 
@@ -75,15 +83,13 @@ public class AccountService {
         return -3;
     }
 
-    public void resetPassword(ResetPasswordRequest resetPasswordRequest){
-        accountRepository.resetPassword(passwordEncoder.encode(resetPasswordRequest.getNewPassword()), resetPasswordRequest.getUserName());
+    public void resetPasswordUser(ResetPasswordRequest resetPasswordRequest){
+        accountRepository.resetPasswordUser(passwordEncoder.encode(resetPasswordRequest.getNewPassword()), resetPasswordRequest.getEmail());
     }
 
-    public Optional<Account> getAccountByUserName(String userName){
-        return accountRepository.findByuserName(userName);
+    public void resetPasswordStaff(ResetPasswordRequest resetPasswordRequest){
+        accountRepository.resetPasswordStaff(passwordEncoder.encode(resetPasswordRequest.getNewPassword()), resetPasswordRequest.getEmail());
     }
 
-    public int getUserIdByUserName(String userName){
-        return accountRepository.getUserIdByUserName(userName);
-    }
+
 }
