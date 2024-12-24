@@ -48,8 +48,55 @@ public class ProductService {
     @Autowired
     private PriceDetailService priceDetailService;
 
+    @Autowired
+    private SeriService seriService;
+
+    public String getProductNameByProductId(int productId) {
+        return repository.getProductNameByProductId(productId);
+    }
+
     public List<ProductResponseDTO> getAllProductByCategoryId(int categoryId) {
         return repository.getAllProductByCategoryId(categoryId).stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    public List<ProductInventoryDTO> getProductInventory(){
+        return repository.findAll().stream().map(this::convertToInventoryDTO).collect(Collectors.toList());
+    }
+    public boolean isCreatedWithinLast30Days(Seri seri) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime thirtyDaysAgo = now.minusDays(30);
+        return seri.getCreateAt().isAfter(thirtyDaysAgo) && seri.getCreateAt().isBefore(now); // trong khoang 30 ngay
+    }
+
+    private ProductInventoryDTO convertToInventoryDTO(Product product) {
+        ProductInventoryDTO productInventoryDTO = new ProductInventoryDTO();
+        productInventoryDTO.setProductId(product.getProductId());
+        productInventoryDTO.setProductName(product.getName());
+        int quantityNew = 0, quantityOld = 0, quantitySales = 0;
+        List<Seri> listSeri = product.getSeris(); // danh sach seri cua product
+        for (Seri seri : listSeri) {
+            if(seri.getOrderDetails().isEmpty()){ // chua co order
+                if(isCreatedWithinLast30Days(seri)) quantityNew += 1; else quantityOld += 1;
+            } else { // co order detail
+                List<OrderDetail> listOrderDetail = seri.getOrderDetails();
+                int check = 0;
+                for (OrderDetail orderDetail : listOrderDetail) {
+                    if(!orderDetail.getOrder().getStatus().equals("Hủy")) {
+                        check = 1;
+                        break;
+                    } // co don thanh cong
+                }
+                if(check == 0) {
+                    if(!isCreatedWithinLast30Days(seri)) quantityOld += 1;
+                    if(isCreatedWithinLast30Days(seri)) quantityNew += 1;
+                }// order detail toan don huy
+                if(check == 1) quantitySales += 1; // co don thanh cong
+            }
+        }
+        productInventoryDTO.setQuantityProductNew(quantityNew);
+        productInventoryDTO.setQuantityProductOld(quantityOld);
+        productInventoryDTO.setQuantityProductSales(quantitySales);
+        return productInventoryDTO;
     }
 
     public List<ProductResponseDTO> getAllProduct() {
@@ -91,7 +138,7 @@ public class ProductService {
         productDetailResponseGuestDTO.setListDetail(product.getProductDetails().stream().map(this::convertDetailToDTO).collect(Collectors.toList()));
         productDetailResponseGuestDTO.setImage(product.getImages().stream().map(this::convertImageToDTO).collect(Collectors.toList()));
         productDetailResponseGuestDTO.setListReview(reviewService.getListReviewByProductId(product.getProductId()));
-        productDetailResponseGuestDTO.setCountSales(countSales(product.getOrderDetails(), product.getProductId()));
+        productDetailResponseGuestDTO.setCountSales(countSales(product.getSeris()));
         // Lọc danh sách PriceDetail để lấy giá hiện tại
         Optional<BigDecimal> priceNow = product.getPriceDetails().stream()
                 .filter(pd -> pd.getStartAt().isBefore(currentDate) || pd.getStartAt().isEqual(currentDate))
@@ -102,23 +149,27 @@ public class ProductService {
         return productDetailResponseGuestDTO;
     }
 
-    private int countSales(List<OrderDetail> listOrderDetail, int productId) {
+    private int countSales(List<Seri> listSeries) {
         int count = 0;
-        for (OrderDetail orderDetail : listOrderDetail) {
-            if (orderDetail.getProduct().getProductId() == productId) count += orderDetail.getQuantity();
+        for (Seri seri : listSeries) {
+            List<OrderDetail> listOrderDetails = seri.getOrderDetails();
+            for (OrderDetail orderDetail : listOrderDetails) {
+                System.out.println(orderDetail.getOrder().getStatus());
+                if(!orderDetail.getOrder().getStatus().equals("Hủy")) count += 1;
+            }
         }
         return count;
     }
 
-    private ReviewResponseGuestDTO convertReviewToGuestDTO(Review review) {
-        ReviewResponseGuestDTO reviewResponseGuestDTO = new ReviewResponseGuestDTO();
-        reviewResponseGuestDTO.setReviewId(review.getReviewId());
-        reviewResponseGuestDTO.setUsername(review.getUser().getFirstName() + " " + review.getUser().getLastName());
-        reviewResponseGuestDTO.setComment(review.getComment());
-        reviewResponseGuestDTO.setRating(review.getRating());
-        reviewResponseGuestDTO.setCreateAt(review.getCreatedAt());
-        return reviewResponseGuestDTO;
-    }
+//    private ReviewResponseGuestDTO convertReviewToGuestDTO(Review review) {
+//        ReviewResponseGuestDTO reviewResponseGuestDTO = new ReviewResponseGuestDTO();
+//        reviewResponseGuestDTO.setReviewId(review.getReviewId());
+//        reviewResponseGuestDTO.setUsername(review.getUser().getFirstName() + " " + review.getUser().getLastName());
+//        reviewResponseGuestDTO.setComment(review.getComment());
+//        reviewResponseGuestDTO.setRating(review.getRating());
+//        reviewResponseGuestDTO.setCreateAt(review.getCreatedAt());
+//        return reviewResponseGuestDTO;
+//    }
 
     private ProductDetailResponseDTO convertProductToDTO(Product product) {
         LocalDateTime currentDate = LocalDateTime.now();
@@ -194,7 +245,7 @@ public class ProductService {
         productResponseDTO.setManufacturerName(product.getManufacturer().getName());
         productResponseDTO.setCategoryName(product.getCategory().getName());
         productResponseDTO.setStock(product.getStock());
-        productResponseDTO.setCountSales(countSales(product.getOrderDetails(), product.getProductId()));
+        productResponseDTO.setCountSales(countSales(product.getSeris()));
         productResponseDTO.setIsPresent(product.getIsPresent());
         String image = product.getImages().stream()
                 .filter(img -> img.isAvatar()) // Lọc các ảnh có avatar là true
@@ -391,8 +442,8 @@ public class ProductService {
     @Transactional
     public int deleteProduct(int productId) {
         Optional<Product> product = repository.findByproductId(productId);
-        if (product.isPresent()) { // nếu tồn tại product mới đi xóa
-            if (orderDetailService.getQuantityProductInOrder(productId) == 0) { // nếu chưa tồn tại trong order nào thì đi xóa
+        if (product.isPresent()) { // nếu tồn tại product mới đi xóa`
+            if (orderDetailService.getQuantityProductInOrder(productId) == 0 ) { // nếu chưa tồn tại trong order nào thì đi xóa
                 // xóa các khóa ngoại trước
                 // xóa product detail
                 productDetailService.deleteProductDetailByProductId(productId);
@@ -400,6 +451,8 @@ public class ProductService {
                 imageService.deleteImageByProductId(productId);
                 // xóa price detail
                 priceDetailService.deletePriceDetail(productId);
+                // xóa seri
+                seriService.deleteSeriByProductId(productId);
                 // xóa product
                 repository.deleteProductById(productId);
                 return 1; // xóa thành công

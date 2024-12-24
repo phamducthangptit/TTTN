@@ -13,6 +13,9 @@ public class WarehouseReceiptDetailService {
     @Autowired
     private WarehouseReceiptDetailRepository warehouseReceiptDetailRepository;
 
+    @Autowired
+    private SeriService seriService;
+
     public void saveWarehouseReceiptDetail(WarehouseReceiptDetailDTO warehouseReceiptDetailDTO, WarehouseReceipt warehouseReceipt) {
         WarehouseReceiptDetail warehouseReceiptDetail = new WarehouseReceiptDetail();
         warehouseReceiptDetail.setWarehouseReceipt(warehouseReceipt);
@@ -20,7 +23,8 @@ public class WarehouseReceiptDetailService {
         product.setId(warehouseReceiptDetailDTO.getProductId());
         warehouseReceiptDetail.setProduct(product);
         warehouseReceiptDetail.setQuantity(warehouseReceiptDetailDTO.getReceivedQuantity());
-        warehouseReceiptDetail.setPrice(warehouseReceiptDetailDTO.getReceivedPrice());
+        // crate seri product
+        seriService.createSeriAuto(warehouseReceiptDetailDTO.getReceivedQuantity(), warehouseReceiptDetailDTO.getProductId());
         warehouseReceiptDetailRepository.save(warehouseReceiptDetail);
     }
 }

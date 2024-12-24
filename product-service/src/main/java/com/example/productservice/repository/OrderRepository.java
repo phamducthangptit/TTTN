@@ -30,6 +30,11 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @Query("UPDATE Order o SET o.statusPayment = :statusPayment WHERE o.orderId = :orderId")
     void updateStatusPayment(@Param("orderId") int orderId, @Param("statusPayment") int statusPayment);
 
+    @Transactional
+    @Modifying
+    @Query("UPDATE Order o SET o.paymentDate = :paymentDate WHERE o.orderId = :orderId")
+    void updatePaymentDate(@Param("orderId") int orderId, @Param("paymentDate") LocalDateTime paymentDate);
+
     @Query("SELECT " +
             "COALESCE(SUM(CASE WHEN o.status = 'Hoàn thành' THEN 1 ELSE 0 END), 0) AS completedOrders, " +
             "COALESCE(SUM(CASE WHEN o.status = 'Mới' THEN 1 ELSE 0 END), 0) AS newOrders, " +
@@ -39,20 +44,19 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<Object[]> getOrderStatistics(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
 
-    @Query("SELECT COUNT(o) FROM Order o WHERE o.user.userId = :userId")
-    int getFrequencyByUserId(@Param("userId") int userId);
-
     @Query("SELECT " +
-            "CAST(o.orderDate AS LocalDate) AS orderDay, " +
+            "CAST(o.paymentDate AS LocalDate) AS paymentDFate, " +
             "SUM(o.totalCostOfGoods) AS dailyRevenue " +
             "FROM Order o " +
-            "WHERE o.status = 'Hoàn thành' " +
-            "AND o.orderDate BETWEEN :startDate AND :endDate " +
-            "GROUP BY CAST(o.orderDate AS LocalDate) " +
-            "ORDER BY CAST(o.orderDate AS LocalDate)")
+            "WHERE o.statusPayment = 1 " +
+            "AND o.paymentDate BETWEEN :startDate AND :endDate " +
+            "GROUP BY CAST(o.paymentDate AS LocalDate) " +
+            "ORDER BY CAST(o.paymentDate AS LocalDate)")
     List<Object[]> getDailyCompletedOrderStatistics(@Param("startDate") LocalDateTime startDate,
                                                     @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT o FROM Order o WHERE o.orderDate >= :sevenDaysAgo AND o.status = 'Hoàn thành' ORDER BY o.orderDate ASC")
-    List<Order> getAllOrderInPrev7Days(@Param("sevenDaysAgo") LocalDateTime sevenDaysAgo);
+    @Query("SELECT o FROM Order o WHERE o.orderDate >= :daysAgo AND o.status != 'Hủy' ORDER BY o.orderDate ASC")
+    List<Order> getAllOrderInPrevDays(@Param("daysAgo") LocalDateTime daysAgo);
+
+
 }

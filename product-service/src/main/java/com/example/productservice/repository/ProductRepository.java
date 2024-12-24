@@ -12,8 +12,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer> {
-    @Query("SELECT p FROM Product p WHERE p.category.categoryId = :categoryId AND p.isPresent = 1")
+    @Query("SELECT p FROM Product p WHERE p.category.categoryId = :categoryId ")
     List<Product> getAllProductByCategoryId(@Param("categoryId") int categoryId);
+
 
     @Query("SELECT p FROM Product p WHERE p.isPresent = 1")
     List<Product> getAllProductByIsPresent();
@@ -50,4 +51,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query("UPDATE Product p SET p.isPresent = :isPresent WHERE p.productId = :productId")
     void updateIsPresent(@Param("isPresent") int isPresent, @Param("productId") int productId);
 
+    @Query("SELECT p.name FROM Product p WHERE p.productId = :productId")
+    String getProductNameByProductId(@Param("productId") int productId);
 }

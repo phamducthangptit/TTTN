@@ -30,7 +30,9 @@ public class Review {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToOne
+
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_detail_id")
     private OrderDetail orderDetail;
+
 }

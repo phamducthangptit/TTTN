@@ -1,10 +1,7 @@
 package com.example.productservice.service;
 
 import com.example.productservice.dto.*;
-import com.example.productservice.entity.Image;
-import com.example.productservice.entity.Order;
-import com.example.productservice.entity.OrderDetail;
-import com.example.productservice.entity.User;
+import com.example.productservice.entity.*;
 import com.example.productservice.repository.OrderRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +30,8 @@ public class OrderService {
     private ProductService productService;
     @Autowired
     private AddressService addressService;
+    @Autowired
+    private SeriService seriService;
 
 
     public Order addNewOrder(OrderRequestDTO orderRequestDTO){
@@ -98,17 +97,15 @@ public class OrderService {
         orderResponseDTO.setAddress(order.getAddress());
         orderResponseDTO.setPhone(order.getPhone());
         orderResponseDTO.setTotalProduct(totalProduct(order.getOrderDetails()));
+        orderResponseDTO.setPaymentDate(order.getPaymentDate());
+        orderResponseDTO.setTotalShippingFee(order.getShippingFee());
         if(order.getStatus().equals("Đã xác nhận")) orderResponseDTO.setCheckStatus(1); else orderResponseDTO.setCheckStatus(0);
         orderResponseDTO.setStatusPayment(order.getStatusPayment());
         return orderResponseDTO;
     }
 
     private int totalProduct(List<OrderDetail> orderDetails){
-        int count = 0;
-        for(OrderDetail orderDetail : orderDetails){
-            count += orderDetail.getQuantity();
-        }
-        return count;
+        return orderDetails.size();
     }
 
     public List<OrderResponseEmployeeDTO> getAllOrderByType(String type){
@@ -119,40 +116,80 @@ public class OrderService {
         OrderResponseEmployeeDTO orderResponseEmployeeDTO = new OrderResponseEmployeeDTO();
         orderResponseEmployeeDTO.setOrderId(order.getOrderId());
         orderResponseEmployeeDTO.setTotalAmountPaid(order.getTotalCostOfGoods());
+        orderResponseEmployeeDTO.setFeeShip(order.getShippingFee());
         orderResponseEmployeeDTO.setOrderDate(order.getOrderDate());
         orderResponseEmployeeDTO.setConsigneeName(order.getConsigneeName());
         orderResponseEmployeeDTO.setAddress(order.getAddress());
         orderResponseEmployeeDTO.setPhone(order.getPhone());
-        orderResponseEmployeeDTO.setCheckStatus(order.getStatus().equals("Mới") ? 1 : 0);
-        orderResponseEmployeeDTO.setListProducts(order.getOrderDetails().stream().map(this::convertOrderDetailToProduct).collect(Collectors.toList()));
+        String status = order.getStatus();
+        if(status.equals("Mới")) orderResponseEmployeeDTO.setCheckStatus(1);
+        if(status.equals("Đã xác nhận")) orderResponseEmployeeDTO.setCheckStatus(2);
+        orderResponseEmployeeDTO.setListProducts(getListProductInOrder(order));
         return orderResponseEmployeeDTO;
+    }
+
+    public List<ProductResponseOrderDTO> getListProductInOrder(Order order){
+        List<OrderDetail> listOrderDetail = order.getOrderDetails();
+        List<ProductResponseOrderDTO> productResponseOrderDTOList = new ArrayList<>();
+        for(OrderDetail orderDetail : listOrderDetail){
+            Optional<ProductResponseOrderDTO> existingDTO = productResponseOrderDTOList.stream().filter(od -> od.getProductId() == orderDetail.getSeri().getProduct().getProductId()).findFirst();
+            if(existingDTO.isPresent()){ // update so luong
+                ProductResponseOrderDTO productResponseOrderDTO = existingDTO.get();
+                productResponseOrderDTO.setQuantity(productResponseOrderDTO.getQuantity() + 1);
+            } else {
+                ProductResponseOrderDTO productResponseOrderDTO = convertOrderDetailToProduct(orderDetail);
+                productResponseOrderDTOList.add(productResponseOrderDTO);
+            }
+        }
+        return productResponseOrderDTOList;
     }
 
     public ProductResponseOrderDTO convertOrderDetailToProduct(OrderDetail orderDetail) {
         ProductResponseOrderDTO productResponseOrderDTO = new ProductResponseOrderDTO();
-        productResponseOrderDTO.setProductId(orderDetail.getProduct().getProductId());
-        productResponseOrderDTO.setName(orderDetail.getProduct().getName());
-//        productResponseOrderDTO.setPrice(orderDetail.getProduct().getPrice());
-        String image = orderDetail.getProduct().getImages().stream()
+        int productId = orderDetail.getSeri().getProduct().getProductId();
+        productResponseOrderDTO.setProductId(productId);
+        productResponseOrderDTO.setName(orderDetail.getSeri().getProduct().getName());
+        String image = orderDetail.getSeri().getProduct().getImages().stream()
                 .filter(img -> img.isAvatar()) // Lọc các ảnh có avatar là true
                 .findFirst() // Lấy ảnh đầu tiên thỏa mãn điều kiện
                 .map(Image::getUrl) // Lấy URL của ảnh từ Optional<Image>
                 .orElse(null);
         productResponseOrderDTO.setImage(image);
-        productResponseOrderDTO.setQuantity(orderDetail.getQuantity());
+        productResponseOrderDTO.setPrice(orderDetail.getPrice());
+        productResponseOrderDTO.setQuantity(1);
         return productResponseOrderDTO;
     }
+
 
     public void employeeUpdateStatusOrder(OrderIdDTO orderIdDTO){
         if(orderIdDTO.getType() == 1){
             repository.updateStatusOrder(orderIdDTO.getOrderId(), "Đã xác nhận");
+        }
+        if(orderIdDTO.getType() == -1){
+            repository.updateStatusOrder(orderIdDTO.getOrderId(), "Hủy");
+            repository.updateStatusPayment(orderIdDTO.getOrderId(), 0); // update lại trạng thái thanh toán
+            // cộng lại số lượng sản phẩm
+            Order order = repository.findByorderId(orderIdDTO.getOrderId());
+            List<OrderDetail> orderDetails = order.getOrderDetails();
+            for(OrderDetail orderDetail : orderDetails){
+                productService.updateStockProduct(- 1, orderDetail.getSeri().getProduct().getProductId());
+            }
+        }
+        if(orderIdDTO.getType() == 2){// giao thành coong
+            repository.updateStatusOrder(orderIdDTO.getOrderId(), "Hoàn thành");
+            Order order = repository.findByorderId(orderIdDTO.getOrderId());
+            // kiểm tra trạng thái thanh toán và ngày thanh toán
+            if(order.getStatusPayment() == 0) repository.updateStatusPayment(orderIdDTO.getOrderId(), 1);
+            if(order.getPaymentDate() == null) repository.updatePaymentDate(orderIdDTO.getOrderId(), LocalDateTime.now());
         }
     }
 
     @Transactional
     public void guestUpdateStatusOrder(OrderIdDTO orderIdDTO){
         if(orderIdDTO.getType() == 1){// chuyển trạng thái sang hoàn thành
+            LocalDateTime paymentDate = LocalDateTime.now();
             repository.updateStatusPayment(orderIdDTO.getOrderId(), 1);
+            repository.updatePaymentDate(orderIdDTO.getOrderId(), paymentDate);
             repository.updateStatusOrder(orderIdDTO.getOrderId(), "Hoàn thành");
         }
 
@@ -163,12 +200,14 @@ public class OrderService {
             Order order = repository.findByorderId(orderIdDTO.getOrderId());
             List<OrderDetail> orderDetails = order.getOrderDetails();
             for(OrderDetail orderDetail : orderDetails){
-                productService.updateStockProduct(- orderDetail.getQuantity(), orderDetail.getProduct().getProductId());
+                productService.updateStockProduct(- 1, orderDetail.getSeri().getProduct().getProductId());
             }
         }
     }
 
     public void updateStatusPayment(int orderId){
+        LocalDateTime paymentDate = LocalDateTime.now();
+        repository.updatePaymentDate(orderId, paymentDate);
         repository.updateStatusPayment(orderId, 1);
     }
 
@@ -206,7 +245,12 @@ public class OrderService {
     }
 
     public List<Order> getAllOrderPrev7Days(){
-        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
-        return repository.getAllOrderInPrev7Days(sevenDaysAgo);
+        LocalDateTime daysAgo = LocalDateTime.now().minusDays(7);
+        return repository.getAllOrderInPrevDays(daysAgo);
+    }
+
+    public List<Order> getAllOrderPrev30Days(){
+        LocalDateTime daysAgo = LocalDateTime.now().minusDays(30);
+        return repository.getAllOrderInPrevDays(daysAgo);
     }
 }

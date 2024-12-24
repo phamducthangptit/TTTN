@@ -89,7 +89,7 @@ public class GoodsReceiptService {
 
     public int deleteGoodsReceiptById(int goodsReceiptId) {
         // check warehouse receipt, nếu đã có phiếu nhập kho thì không cho sửa xóa
-        if(warehouseReceiptService.getByGoodsReceiptId(goodsReceiptId) == null) {
+        if(warehouseReceiptService.getByGoodsReceiptId(goodsReceiptId).isEmpty()) {
             // bang null --> chua co phieu nhap kho, tien hanh xoa detail roi xoa phieu
             // xoa goods receipt detail
             goodsReceiptDetailService.deleteByGoodsReceiptId(goodsReceiptId);
@@ -100,13 +100,8 @@ public class GoodsReceiptService {
         return -1;
     }
 
-    public int changeStatus(int goodsReceiptId){
-        if(!warehouseReceiptService.getByGoodsReceiptId(goodsReceiptId).isEmpty()) {
-            // khac null -->  co phieu nhap kho, cho hoan thanh don nhap
-            goodsReceiptRepository.updateIsComplete(goodsReceiptId);
-            return 1;
-        }
-        return -1; // = null chua co phieu nhap, khong cho xoa
+    public void changeStatus(int goodsReceiptId){
+        goodsReceiptRepository.updateIsComplete(goodsReceiptId);
     }
 
     public GoodsReceiptDTO getGoodsReceiptById(int goodsReceiptId) {
@@ -153,7 +148,6 @@ public class GoodsReceiptService {
             for(GoodsReceiptAndWarehouseReceiptDetailDTO tmp : listGoodsReceiptAndWarehouseReceiptDetailDTO) {
                 if(warehouseReceiptDetail.getProduct().getId().equals(tmp.getProductId())) {
                     tmp.setReceivedQuantity(warehouseReceiptDetail.getQuantity());
-                    tmp.setReceivedPrice(warehouseReceiptDetail.getPrice());
                     tmp.setDateCreateWarehouseReceipt(warehouseReceiptDetail.getWarehouseReceipt().getCreateAt());
                 }
             }

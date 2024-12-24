@@ -18,12 +18,15 @@ public class OrderResponseDTO {
     private String totalAmountPaid;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
     private LocalDateTime orderDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss dd-MM-yyyy")
+    private LocalDateTime paymentDate;
     private String address;
     private String status;
     private String phone;
     private int totalProduct;
     private int checkStatus;
     private int statusPayment;
+    private String shippingFee;
 
     private String formatPrice(BigDecimal price) {
         return decimalFormat.format(price) + " VNĐ";
@@ -32,5 +35,10 @@ public class OrderResponseDTO {
     // Setter for price
     public void setTotalAmountPaid(BigDecimal price) {
         this.totalAmountPaid = formatPrice(price);
+    }
+
+    // Setter for price
+    public void setTotalShippingFee(BigDecimal price) {
+        this.shippingFee = formatPrice(price);
     }
 }

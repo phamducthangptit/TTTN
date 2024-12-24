@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Integer> {
-    @Query("SELECT r FROM Review r WHERE r.orderDetail.product.productId = :productId")
+    @Query("SELECT r FROM Review r WHERE r.orderDetail.seri.product.productId = :productId")
     List<Review> getListReviewByProductId(@Param("productId") int productId);
 
     @Query("SELECT COUNT(r) > 0 FROM Review r WHERE r.orderDetail.orderDetailId = :orderDetailId")

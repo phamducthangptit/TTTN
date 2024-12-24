@@ -6,10 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PredictResponseDTO {
-    private int day;
-    private List<CategoryPredictResponse> predict;
+@Data
+public class Predict30DaysResponseDTO {
+    private List<ProductPredictResponse> predict;
 }

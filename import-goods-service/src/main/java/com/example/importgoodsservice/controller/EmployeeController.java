@@ -108,18 +108,18 @@ public class EmployeeController {
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
-    @PostMapping("/change-status-goods-receipt")
-    public ResponseEntity<?> changeStatusGoodsReceipt(@RequestHeader("X-Role") String role, @RequestParam("goods-receipt-id") int goodsReceiptId){
-        if(role.equals("EMPLOYEE")){
-            int x = goodsReceiptService.changeStatus(goodsReceiptId);
-            if(x == 1){
-                return new ResponseEntity<>(HttpStatus.OK);
-            } else if(x == -1){
-                return new ResponseEntity<>(new ResponseDTO("ErrorChangeStatus", "Bạn chưa nhập kho nên chưa thể hoàn thành đơn nhập hàng!"), HttpStatus.CONFLICT);
-            }
-        }
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-    }
+//    @PostMapping("/change-status-goods-receipt")
+//    public ResponseEntity<?> changeStatusGoodsReceipt(@RequestHeader("X-Role") String role, @RequestParam("goods-receipt-id") int goodsReceiptId){
+//        if(role.equals("EMPLOYEE")){
+//            int x = goodsReceiptService.changeStatus(goodsReceiptId);
+//            if(x == 1){
+//                return new ResponseEntity<>(HttpStatus.OK);
+//            } else if(x == -1){
+//                return new ResponseEntity<>(new ResponseDTO("ErrorChangeStatus", "Bạn chưa nhập kho nên chưa thể hoàn thành đơn nhập hàng!"), HttpStatus.CONFLICT);
+//            }
+//        }
+//        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+//    }
 
 
     @GetMapping("/get-product-no-warehouse-receipt")
@@ -138,6 +138,11 @@ public class EmployeeController {
     public ResponseEntity<?> createWarehouseReceipt(@RequestHeader("X-Role") String role, @RequestBody WarehouseReceiptDTO warehouseReceiptDTO){
         if(role.equals("EMPLOYEE")){
             warehouseReceiptService.addNewWarehouseReceipt(warehouseReceiptDTO);
+            int goodsReceiptId = warehouseReceiptDTO.getListWarehouseReceiptDetail().get(0).getGoodsReceiptId();
+            // update status goods receipt
+            if(goodsReceiptDetailService.getAllProductNoWarehouseReceipt(goodsReceiptId).isEmpty()){
+                goodsReceiptService.changeStatus(goodsReceiptId);
+            }
             return new ResponseEntity<>(HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);

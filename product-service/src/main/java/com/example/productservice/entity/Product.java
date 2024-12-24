@@ -9,7 +9,10 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -73,8 +76,9 @@ public class Product {
     private List<Cart> carts;
 
     @OneToMany(mappedBy = "product")
-    private List<OrderDetail> orderDetails;
+    private List<PriceDetail> priceDetails;
 
     @OneToMany(mappedBy = "product")
-    private List<PriceDetail> priceDetails;
+    private List<Seri> seris = new ArrayList<>();
+
 }

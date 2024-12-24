@@ -3,19 +3,13 @@ package com.example.productservice.controller;
 import com.example.productservice.dto.RevenueRequestDTO;
 import com.example.productservice.service.OrderService;
 import com.example.productservice.service.PredictService;
+import com.example.productservice.service.SeriService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Map;
 
 @RestController
 @RequestMapping("api/product-service/admin/")
@@ -25,6 +19,9 @@ public class AdminController {
 
     @Autowired
     private PredictService predictService;
+
+    @Autowired
+    private SeriService seriService;
 
 
     @PostMapping("revenue")
@@ -45,14 +42,30 @@ public class AdminController {
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
-    @PostMapping("predict-trend")
-    public ResponseEntity<?> predictTrend(@RequestHeader("X-Role") String role) throws JsonProcessingException {
+    @PostMapping("predict-trend-7days")
+    public ResponseEntity<?> predictTrend7Days(@RequestHeader("X-Role") String role) throws JsonProcessingException {
         if (role.equals("ADMIN") || role.equals("EMPLOYEE")) {
 
-            return new ResponseEntity<>(predictService.predict(), HttpStatus.OK);
+            return new ResponseEntity<>(predictService.predict7Days(), HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
+    @PostMapping("predict-trend-30days")
+    public ResponseEntity<?> predictTrend30Days(@RequestHeader("X-Role") String role) throws JsonProcessingException {
+        if (role.equals("ADMIN") || role.equals("EMPLOYEE")) {
 
+            return new ResponseEntity<>(predictService.predict30Days(), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @GetMapping("create-seri")
+    public ResponseEntity<?> createAutoSeri(@RequestHeader("X-Role") String role, @RequestParam("productId") int productId, @RequestParam("quantity") int quantity) {
+        if (role.equals("ADMIN") || role.equals("EMPLOYEE")) {
+            seriService.createSeriAuto(quantity, productId);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
 }

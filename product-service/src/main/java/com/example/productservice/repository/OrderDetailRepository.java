@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, Integer> {
-    @Query("SELECT COUNT(od) FROM OrderDetail od WHERE od.product.productId = :productId")
+    @Query("SELECT COUNT(od) FROM OrderDetail od WHERE od.seri.product.productId = :productId")
     int getQuantityProductInOrder(@Param("productId") int productId);
 
     List<OrderDetail> findAllByOrder_orderId(int orderId);

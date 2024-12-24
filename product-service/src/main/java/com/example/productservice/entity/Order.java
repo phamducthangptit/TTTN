@@ -44,6 +44,9 @@ public class Order {
     @Column(name = "status_payment")
     private int statusPayment;
 
+    @Column(name = "payment_date")
+    private LocalDateTime paymentDate;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

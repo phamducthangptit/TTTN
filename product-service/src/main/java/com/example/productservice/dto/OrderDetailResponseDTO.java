@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -13,7 +14,9 @@ import java.text.DecimalFormat;
 public class OrderDetailResponseDTO {
     private static final DecimalFormat decimalFormat = new DecimalFormat("###,###,###,###");
     private int productId;
+    private String productName;
     private int orderDetailId;
+    private int orderId;
     private String image;
     private int stock;
     private int checkStatus;
@@ -22,7 +25,7 @@ public class OrderDetailResponseDTO {
     private String formatPrice(BigDecimal price) {
         return decimalFormat.format(price) + " VNĐ";
     }
-
+    private List<String> listSeri;
     // Setter for price
     public void setPrice(BigDecimal price) {
         this.price = formatPrice(price);

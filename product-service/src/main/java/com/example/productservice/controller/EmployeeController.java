@@ -40,6 +40,9 @@ public class EmployeeController {
     @Autowired
     private PriceService priceService;
 
+    @Autowired
+    private SeriService seriService;
+
     @GetMapping("/manufacturer/get-all-manufacturer")
     public ResponseEntity<?> getAllManufacturer(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
                                                 @RequestHeader("X-Role") String role) {
@@ -164,10 +167,18 @@ public class EmployeeController {
     }
 
     @GetMapping("/product/get-all-product-by-category")
-    public ResponseEntity<?> getAllProduct(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+    public ResponseEntity<?> getAllProductByCategory(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
                                            @RequestHeader("X-Role") String role, @RequestParam("id") int id) {
         if (role.equals("EMPLOYEE")) {
             return new ResponseEntity<>(productService.getAllProductByCategoryId(id), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @GetMapping("/product/get-product-inventory")
+    public ResponseEntity<?> getAllProduct(@RequestHeader("X-Role") String role) {
+        if (role.equals("EMPLOYEE") || role.equals("ADMIN")) {
+            return new ResponseEntity<>(productService.getProductInventory(), HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
@@ -248,8 +259,7 @@ public class EmployeeController {
     }
 
     @PostMapping("/order/update-status-order")
-    public ResponseEntity<?> updateStatusOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
-                                               @RequestHeader("X-Role") String role, @RequestBody OrderIdDTO orderIdDTO){
+    public ResponseEntity<?> updateStatusOrder(@RequestHeader("X-Role") String role, @RequestBody OrderIdDTO orderIdDTO){
         if(role.equals("EMPLOYEE")){
             orderService.employeeUpdateStatusOrder(orderIdDTO);
             return new ResponseEntity<>(HttpStatus.OK);
@@ -290,4 +300,5 @@ public class EmployeeController {
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
+
 }

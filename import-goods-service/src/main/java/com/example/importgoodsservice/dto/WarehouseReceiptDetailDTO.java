@@ -13,5 +13,4 @@ public class WarehouseReceiptDetailDTO {
     private int goodsReceiptId;
     private int productId;
     private int receivedQuantity;
-    private BigDecimal receivedPrice;
 }

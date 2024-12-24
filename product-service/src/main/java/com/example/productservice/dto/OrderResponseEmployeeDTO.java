@@ -23,6 +23,7 @@ public class OrderResponseEmployeeDTO {
     private String address;
     private String phone;
     private int checkStatus;
+    private String feeShip;
 
     private List<ProductResponseOrderDTO> listProducts;
     private String formatPrice(BigDecimal price) {
@@ -32,5 +33,9 @@ public class OrderResponseEmployeeDTO {
     // Setter for price
     public void setTotalAmountPaid(BigDecimal price) {
         this.totalAmountPaid = formatPrice(price);
+    }
+
+    public void setFeeShip(BigDecimal price) {
+        this.feeShip = formatPrice(price);
     }
 }

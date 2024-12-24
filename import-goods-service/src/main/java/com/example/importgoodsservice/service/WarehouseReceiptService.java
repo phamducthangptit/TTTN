@@ -27,6 +27,7 @@ public class WarehouseReceiptService {
     @Autowired
     private ProductService productService;
 
+
     public List<WarehouseReceipt> getByGoodsReceiptId(int goodsReceiptId) {
         return warehouseReceiptRepository.findByGoodsReceiptId(goodsReceiptId);
     }
@@ -34,13 +35,14 @@ public class WarehouseReceiptService {
     @Transactional
     public void addNewWarehouseReceipt(WarehouseReceiptDTO warehouseReceiptDTO) {
         // save warehouse receipt
+        int goodsReceiptId = warehouseReceiptDTO.getListWarehouseReceiptDetail().get(0).getGoodsReceiptId();
         WarehouseReceipt warehouseReceipt = new WarehouseReceipt();
         int staffId = staffService.getStaffIdByUserName(warehouseReceiptDTO.getUserName());
         Staff staff = new Staff();
         staff.setId(staffId);
         warehouseReceipt.setStaff(staff);
         GoodsReceipt goodsReceipt = new GoodsReceipt();
-        goodsReceipt.setId(warehouseReceiptDTO.getListWarehouseReceiptDetail().get(0).getGoodsReceiptId());
+        goodsReceipt.setId(goodsReceiptId);
         warehouseReceipt.setGoodsReceipt(goodsReceipt);
         warehouseReceipt.setCreateAt(LocalDateTime.now());
         WarehouseReceipt warehouseReceiptSave = warehouseReceiptRepository.save(warehouseReceipt);
@@ -51,6 +53,7 @@ public class WarehouseReceiptService {
             // update quantity product
             productService.updateStockProduct(warehouseReceiptDetailDTO.getProductId(), warehouseReceiptDetailDTO.getReceivedQuantity());
         }
+
     }
 
 

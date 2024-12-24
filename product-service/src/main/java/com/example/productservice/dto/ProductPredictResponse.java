@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @NoArgsConstructor
-public class CategoryPredictResponse {
-    private String categoryName;
+public class ProductPredictResponse {
+    private String productName;
     private Double quantity;
 }
