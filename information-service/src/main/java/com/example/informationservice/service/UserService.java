@@ -1,11 +1,13 @@
 package com.example.informationservice.service;
 
 import com.example.informationservice.dto.*;
-import com.example.informationservice.entity.Account;
 import com.example.informationservice.entity.Staff;
 import com.example.informationservice.entity.User;
 import com.example.informationservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,10 +26,13 @@ public class UserService {
     private StaffService staffService;
 
 
-    public List<GuestDTO> getAllGuest() {
-        List<User> users = userRepository.getListGuest();
-        return users.stream().map(this::convertToDTO).collect(Collectors.toList());
+    public Page<GuestDTO> getAllGuest(Pageable pageable) {
+        Page<User> users = userRepository.getListGuest(pageable);
+//        System.out.println(users.getNumberOfElements());
+        Page<GuestDTO> guestDTOs = users.map(this::convertToDTO);
+        return guestDTOs;
     }
+
 
 
 

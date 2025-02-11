@@ -2,6 +2,8 @@ package com.example.informationservice.repository;
 
 import com.example.informationservice.entity.User;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,11 +19,9 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     User findByuserName(String userName);
 
     @Query("SELECT u FROM User u WHERE u.account.role.roleId = 3")
-    List<User> getListGuest();
+    Page<User> getListGuest(Pageable pageable);
 
 
-    @Query("SELECT u FROM User u WHERE u.email = :email AND u.account.userName = :username")
-    Optional<User> getUserByEmail(@Param("email") String email, @Param("username") String username);
 
     @Modifying
     @Transactional
